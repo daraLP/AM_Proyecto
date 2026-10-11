@@ -1,5 +1,5 @@
 import { supabase } from "../lib/supabaseClient";
-import type { Motivo } from "../types/database";
+import type { Motivo, MovimientoInventario } from "../types/database";
 
 export function traducirError(error: {
   code?: string;
@@ -30,13 +30,18 @@ export async function registrarMovimiento({
   motivo,
   nota,
   opId,
-}: Params) {
+}: Params): Promise<{
+  data: MovimientoInventario | null;
+  error: string | null;
+}> {
   const { data, error } = await supabase.rpc("registrar_movimiento", {
     p_insumo_id: insumoId,
     p_delta: delta,
     p_motivo: motivo,
-    p_nota: nota?.trim() ? nota.trim() : null,
-    p_client_op_id: opId ?? null,
+    p_nota: nota?.trim() || undefined, // las RPC tipadas aceptan undefined, no null
+    p_client_op_id: opId,
   });
-  return { data, error: error ? traducirError(error) : null };
+
+  if (error) return { data: null, error: traducirError(error) };
+  return { data: data as MovimientoInventario, error: null };
 }
