@@ -1,6 +1,6 @@
 import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { DashboardScreen } from "../features/dashboard/DashboardScreen";
+import { DashboardStack } from "./DashboardStack";
 import { InventarioStack } from "./InventarioStack";
 import { ListaComprasScreen } from "../features/listaCompras/ListaComprasScreen";
 import { PerfilScreen } from "../features/auth/PerfilScreen";
@@ -17,7 +17,7 @@ const Tab = createBottomTabNavigator<AppTabsParamList>();
 export function AppTabs() {
   return (
     <Tab.Navigator screenOptions={{ headerShown: false }}>
-      <Tab.Screen name="Dashboard" component={DashboardScreen} />
+      <Tab.Screen name="Dashboard" component={DashboardStack} />
       <Tab.Screen
         name="Inventario"
         component={InventarioStack}

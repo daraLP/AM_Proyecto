@@ -175,6 +175,7 @@ import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { supabase } from "../../lib/supabaseClient";
 import type { InventarioStackParamList } from "../../navigation/InventarioStack";
 import { theme } from "../../theme/theme";
+import { crearInsumo, actualizarInsumo } from "../../services/insumos";
 
 const esquemaInsumo = z.object({
   nombre: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
@@ -222,18 +223,12 @@ export function InsumoFormScreen({ route, navigation }: Props) {
   const unidadSeleccionada = watch("unidad_medida");
 
   const onSubmit = async (valores: FormOutput) => {
+    const { stock_actual, ...datos } = valores;
     const { error } = insumoExistente
-      ? await supabase
-          .from("insumos")
-          .update(valores)
-          .eq("id", insumoExistente.id)
-      : await supabase.from("insumos").insert(valores);
+      ? await actualizarInsumo(insumoExistente.id, datos)
+      : await crearInsumo(datos, stock_actual);
 
-    if (error) {
-      Alert.alert("Error al guardar", error.message);
-      return;
-    }
-
+    if (error) return Alert.alert("Error al guardar", error);
     navigation.goBack();
   };
 

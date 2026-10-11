@@ -1,83 +1,3 @@
-// import React, { useCallback, useState } from "react";
-// import { View, FlatList, Text, Button, ActivityIndicator } from "react-native";
-// import { useFocusEffect } from "@react-navigation/native";
-// import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-// import { supabase } from "../../lib/supabaseClient";
-// import type { Insumo } from "../../types/database";
-// import type { InventarioStackParamList } from "../../navigation/InventarioStack";
-
-// type Props = NativeStackScreenProps<InventarioStackParamList, "InventarioList">;
-
-// export function InventarioListScreen({ navigation }: Props) {
-//   const [insumos, setInsumos] = useState<Insumo[]>([]);
-//   const [cargando, setCargando] = useState(true);
-
-//   const cargarInsumos = useCallback(async () => {
-//     setCargando(true);
-//     const { data, error } = await supabase
-//       .from("insumos")
-//       .select("*")
-//       .order("nombre");
-
-//     if (error) {
-//       console.error("Error al cargar insumos:", error.message);
-//     } else {
-//       setInsumos((data ?? []) as Insumo[]);
-//     }
-//     setCargando(false);
-//   }, []);
-
-//   useFocusEffect(
-//     useCallback(() => {
-//       cargarInsumos();
-//     }, [cargarInsumos]),
-//   );
-
-//   if (cargando) {
-//     return <ActivityIndicator style={{ flex: 1 }} size="large" />;
-//   }
-
-//   return (
-//     <View style={{ flex: 1 }}>
-//       <View style={{ padding: 12 }}>
-//         <Button
-//           title="Agregar insumo"
-//           onPress={() => navigation.navigate("InsumoForm", undefined)}
-//         />
-//       </View>
-
-//       <FlatList
-//         data={insumos}
-//         keyExtractor={(item) => item.id}
-//         ListEmptyComponent={
-//           <Text style={{ textAlign: "center", marginTop: 40, color: "#888" }}>
-//             Tu almacén está vacío. Agrega tu primer insumo.
-//           </Text>
-//         }
-//         renderItem={({ item }) => {
-//           const stockBajo = item.stock_actual <= item.stock_minimo;
-//           return (
-//             <View
-//               style={{ padding: 16, borderBottomWidth: 1, borderColor: "#eee" }}
-//             >
-//               <Text style={{ fontWeight: "bold" }}>{item.nombre}</Text>
-//               <Text style={{ color: stockBajo ? "#b3261e" : "#333" }}>
-//                 Stock: {item.stock_actual} {item.unidad_medida}
-//                 {stockBajo ? " — STOCK BAJO" : ""}
-//               </Text>
-//               <Button
-//                 title="Editar"
-//                 onPress={() =>
-//                   navigation.navigate("InsumoForm", { insumo: item })
-//                 }
-//               />
-//             </View>
-//           );
-//         }}
-//       />
-//     </View>
-//   );
-// }
 import React, { useCallback, useState } from "react";
 import {
   StyleSheet,
@@ -90,7 +10,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { supabase } from "../../lib/supabaseClient";
+import { listarInsumos } from "../../services/insumos";
+import { useEsAdmin } from "../auth/authStore";
 import type { Insumo } from "../../types/database";
 import type { InventarioStackParamList } from "../../navigation/InventarioStack";
 import { theme } from "../../theme/theme";
@@ -100,18 +21,16 @@ type Props = NativeStackScreenProps<InventarioStackParamList, "InventarioList">;
 export function InventarioListScreen({ navigation }: Props) {
   const [insumos, setInsumos] = useState<Insumo[]>([]);
   const [cargando, setCargando] = useState(true);
+  const esAdmin = useEsAdmin();
 
   const cargarInsumos = useCallback(async () => {
     setCargando(true);
-    const { data, error } = await supabase
-      .from("insumos")
-      .select("*")
-      .order("nombre");
+    const { data, error } = await listarInsumos();
 
     if (error) {
-      console.error("Error al cargar insumos:", error.message);
+      console.error("Error al cargar insumos:", error);
     } else {
-      setInsumos((data ?? []) as Insumo[]);
+      setInsumos(data);
     }
     setCargando(false);
   }, []);
@@ -132,15 +51,17 @@ export function InventarioListScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["bottom", "left", "right"]}>
-      <View style={styles.headerContainer}>
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => navigation.navigate("InsumoForm", undefined)}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.addButtonText}>+ Agregar Insumo</Text>
-        </TouchableOpacity>
-      </View>
+      {esAdmin && (
+        <View style={styles.headerContainer}>
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={() => navigation.navigate("InsumoForm", undefined)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.addButtonText}>+ Agregar Insumo</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       <FlatList
         data={insumos}
@@ -151,12 +72,17 @@ export function InventarioListScreen({ navigation }: Props) {
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyTitle}>Sin inventario</Text>
             <Text style={styles.emptySubtitle}>
-              Tu almacén está vacío. Agrega tu primer insumo para comenzar.
+              {esAdmin
+                ? "Tu almacén está vacío. Agrega tu primer insumo para comenzar."
+                : "Aún no hay insumos registrados."}
             </Text>
           </View>
         }
         renderItem={({ item }) => {
-          const stockBajo = item.stock_actual <= item.stock_minimo;
+          const stockBajo = item.estado_stock !== "ok";
+          const etiqueta =
+            item.estado_stock === "agotado" ? "AGOTADO" : "STOCK BAJO";
+
           return (
             <View style={styles.card}>
               <View style={styles.cardHeader}>
@@ -169,7 +95,7 @@ export function InventarioListScreen({ navigation }: Props) {
                 </Text>
                 {stockBajo && (
                   <View style={styles.badgeDanger}>
-                    <Text style={styles.badgeDangerText}>STOCK BAJO</Text>
+                    <Text style={styles.badgeDangerText}>{etiqueta}</Text>
                   </View>
                 )}
               </View>
@@ -187,15 +113,17 @@ export function InventarioListScreen({ navigation }: Props) {
                 (Mín: {item.stock_minimo})
               </Text>
 
-              <TouchableOpacity
-                style={styles.editButton}
-                onPress={() =>
-                  navigation.navigate("InsumoForm", { insumo: item })
-                }
-                activeOpacity={0.7}
-              >
-                <Text style={styles.editButtonText}>Editar Insumo</Text>
-              </TouchableOpacity>
+              {esAdmin && (
+                <TouchableOpacity
+                  style={styles.editButton}
+                  onPress={() =>
+                    navigation.navigate("InsumoForm", { insumo: item })
+                  }
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.editButtonText}>Editar Insumo</Text>
+                </TouchableOpacity>
+              )}
             </View>
           );
         }}
