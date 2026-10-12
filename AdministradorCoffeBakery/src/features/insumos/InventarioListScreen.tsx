@@ -8,17 +8,14 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useFocusEffect } from "@react-navigation/native";
-import type { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { useFocusEffect, useRouter } from "expo-router";
 import { listarInsumos } from "../../services/insumos";
 import { useEsAdmin } from "../auth/authStore";
 import type { Insumo } from "../../types/database";
-import type { InventarioStackParamList } from "../../navigation/InventarioStack";
 import { theme } from "../../theme/theme";
 
-type Props = NativeStackScreenProps<InventarioStackParamList, "InventarioList">;
-
-export function InventarioListScreen({ navigation }: Props) {
+export function InventarioListScreen() {
+  const router = useRouter();
   const [insumos, setInsumos] = useState<Insumo[]>([]);
   const [cargando, setCargando] = useState(true);
   const esAdmin = useEsAdmin();
@@ -55,7 +52,7 @@ export function InventarioListScreen({ navigation }: Props) {
         <View style={styles.headerContainer}>
           <TouchableOpacity
             style={styles.addButton}
-            onPress={() => navigation.navigate("InsumoForm", undefined)}
+            onPress={() => router.push("/inventario/form")}
             activeOpacity={0.7}
           >
             <Text style={styles.addButtonText}>+ Agregar Insumo</Text>
@@ -117,7 +114,10 @@ export function InventarioListScreen({ navigation }: Props) {
                 <TouchableOpacity
                   style={styles.editButton}
                   onPress={() =>
-                    navigation.navigate("InsumoForm", { insumo: item })
+                    router.push({
+                      pathname: "/inventario/form",
+                      params: { id: item.id },
+                    })
                   }
                   activeOpacity={0.7}
                 >

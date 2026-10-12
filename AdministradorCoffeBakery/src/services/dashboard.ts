@@ -23,11 +23,13 @@ function numeroValido(valor: unknown, campo: string): number {
 export async function obtenerResumenDashboard(): Promise<ResumenDashboard> {
   const { data, error } = await supabase.rpc("resumen_dashboard");
   if (error) throw new Error(traducirError(error));
-  if (!data || typeof data !== "object" || Array.isArray(data)) {
+
+  const fila = Array.isArray(data) ? data[0] : data;
+  if (!fila || typeof fila !== "object") {
     throw new Error("La respuesta del resumen de Dashboard no es válida.");
   }
 
-  const resumen = data as Record<string, unknown>;
+  const resumen = fila as Record<string, unknown>;
   return {
     total: numeroValido(resumen.total, "total"),
     bajo: numeroValido(resumen.bajo, "bajo"),
@@ -52,11 +54,15 @@ export async function obtenerConsumoSemanal(
 
   return data.map((fila) => {
     if (!fila || typeof fila !== "object") {
-      throw new Error("La respuesta del consumo semanal contiene datos inválidos.");
+      throw new Error(
+        "La respuesta del consumo semanal contiene datos inválidos.",
+      );
     }
     const registro = fila as Record<string, unknown>;
     if (typeof registro.dia !== "string") {
-      throw new Error("La respuesta del consumo semanal contiene un día inválido.");
+      throw new Error(
+        "La respuesta del consumo semanal contiene un día inválido.",
+      );
     }
     return {
       dia: registro.dia,

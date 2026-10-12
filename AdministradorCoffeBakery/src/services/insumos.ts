@@ -20,6 +20,18 @@ export async function listarInsumos() {
   };
 }
 
+export async function obtenerInsumo(id: string) {
+  const { data, error } = await supabase
+    .from("insumos")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+  return {
+    data: (data ?? null) as Insumo | null,
+    error: error ? traducirError(error) : null,
+  };
+}
+
 // El stock NO se envía en el insert: el stock inicial se registra como movimiento (queda en el historial)
 export async function crearInsumo(datos: DatosInsumo, stockInicial: number) {
   const { data, error } = await supabase

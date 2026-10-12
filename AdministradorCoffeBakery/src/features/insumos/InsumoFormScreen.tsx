@@ -154,7 +154,7 @@
 //     </ScrollView>
 //   );
 // }
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   StyleSheet,
   View,
@@ -171,11 +171,13 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { supabase } from "../../lib/supabaseClient";
-import type { InventarioStackParamList } from "../../navigation/InventarioStack";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { theme } from "../../theme/theme";
-import { crearInsumo, actualizarInsumo } from "../../services/insumos";
+import {
+  actualizarInsumo,
+  crearInsumo,
+  obtenerInsumo,
+} from "../../services/insumos";
 
 const esquemaInsumo = z.object({
   nombre: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
@@ -189,8 +191,6 @@ const esquemaInsumo = z.object({
 type FormInput = z.input<typeof esquemaInsumo>;
 type FormOutput = z.infer<typeof esquemaInsumo>;
 
-type Props = NativeStackScreenProps<InventarioStackParamList, "InsumoForm">;
-
 const UNIDADES: Array<{
   label: string;
   value: "kg" | "litros" | "unidades" | "cajas";
@@ -201,8 +201,12 @@ const UNIDADES: Array<{
   { label: "Cajas", value: "cajas" },
 ];
 
-export function InsumoFormScreen({ route, navigation }: Props) {
-  const insumoExistente = route.params?.insumo;
+export function InsumoFormScreen() {
+  const router = useRouter();
+  const { id } = useLocalSearchParams<{ id?: string }>();
+  const [insumoExistente, setInsumoExistente] = useState<
+    Awaited<ReturnType<typeof obtenerInsumo>>["data"]
+  >(null);
 
   const {
     control,
@@ -213,12 +217,34 @@ export function InsumoFormScreen({ route, navigation }: Props) {
   } = useForm<FormInput, any, FormOutput>({
     resolver: zodResolver(esquemaInsumo),
     defaultValues: {
-      nombre: insumoExistente?.nombre ?? "",
-      unidad_medida: insumoExistente?.unidad_medida ?? "unidades",
-      stock_actual: insumoExistente?.stock_actual ?? 0,
-      stock_minimo: insumoExistente?.stock_minimo ?? 0,
+      nombre: "",
+      unidad_medida: "unidades",
+      stock_actual: 0,
+      stock_minimo: 0,
     },
   });
+
+  useEffect(() => {
+    if (!id) return;
+    let activo = true;
+    void obtenerInsumo(id).then(({ data, error }) => {
+      if (!activo) return;
+      if (error) {
+        Alert.alert("Error al cargar el insumo", error);
+        return;
+      }
+      setInsumoExistente(data);
+      if (data) {
+        setValue("nombre", data.nombre);
+        setValue("unidad_medida", data.unidad_medida);
+        setValue("stock_actual", data.stock_actual);
+        setValue("stock_minimo", data.stock_minimo);
+      }
+    });
+    return () => {
+      activo = false;
+    };
+  }, [id, setValue]);
 
   const unidadSeleccionada = watch("unidad_medida");
 
@@ -229,7 +255,7 @@ export function InsumoFormScreen({ route, navigation }: Props) {
       : await crearInsumo(datos, stock_actual);
 
     if (error) return Alert.alert("Error al guardar", error);
-    navigation.goBack();
+    router.back();
   };
 
   return (

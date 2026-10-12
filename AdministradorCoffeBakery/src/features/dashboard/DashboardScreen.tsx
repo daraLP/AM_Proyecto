@@ -9,16 +9,14 @@ import {
   View,
 } from "react-native";
 import { BarChart } from "react-native-gifted-charts";
-import type { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useDashboard } from "../../hooks/useDashboard";
 import { useEsAdmin } from "../auth/authStore";
-import type { DashboardStackParamList } from "../../navigation/DashboardStack";
 import { theme } from "../../theme/theme";
 
-type Props = NativeStackScreenProps<DashboardStackParamList, "Dashboard">;
-
-export function DashboardScreen({ navigation }: Props) {
+export function DashboardScreen() {
+  const router = useRouter();
   const esAdmin = useEsAdmin();
   const {
     resumen,
@@ -111,7 +109,7 @@ export function DashboardScreen({ navigation }: Props) {
               accessibilityRole="button"
               accessibilityLabel="Abrir lista de compras"
               style={styles.alertButton}
-              onPress={() => navigation.getParent()?.navigate("ListaDeCompras")}
+              onPress={() => router.push("/compras")}
             >
               <Text style={styles.alertButtonText}>Ver compras</Text>
             </Pressable>
@@ -150,7 +148,7 @@ export function DashboardScreen({ navigation }: Props) {
             accessibilityRole="button"
             accessibilityLabel="Abrir reporte detallado de consumo"
             style={styles.reportButton}
-            onPress={() => navigation.navigate("Reports")}
+            onPress={() => router.push("/dashboard/reports")}
           >
             <Text style={styles.reportButtonText}>Ver reporte detallado</Text>
             <Text style={styles.reportArrow}>›</Text>

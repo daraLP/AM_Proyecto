@@ -159,9 +159,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import type { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { useRouter } from "expo-router";
 import { useAuthStore } from "./authStore";
-import type { AuthStackParamList } from "../../navigation/AuthStack";
 import { theme } from "../../theme/theme";
 
 const esquemaRegistro = z.object({
@@ -172,9 +171,8 @@ const esquemaRegistro = z.object({
     .min(6, "La contraseña debe tener al menos 6 caracteres"),
 });
 type FormValues = z.infer<typeof esquemaRegistro>;
-type Props = NativeStackScreenProps<AuthStackParamList, "Registro">;
-
-export function RegisterScreen({ navigation }: Props) {
+export function RegisterScreen() {
+  const router = useRouter();
   const registrarse = useAuthStore((e) => e.registrarse);
   const {
     control,
@@ -197,7 +195,7 @@ export function RegisterScreen({ navigation }: Props) {
         "Revisa tu correo",
         "Te enviamos un enlace para confirmar tu cuenta.",
       );
-      navigation.navigate("Login");
+      router.replace("/login");
     }
     // Sin confirmación de correo: la sesión se inicia sola y el navegador cambia de pantalla.
   };
@@ -300,7 +298,7 @@ export function RegisterScreen({ navigation }: Props) {
 
             <TouchableOpacity
               style={styles.link}
-              onPress={() => navigation.navigate("Login")}
+              onPress={() => router.replace("/login")}
               activeOpacity={0.7}
             >
               <Text style={styles.linkText}>

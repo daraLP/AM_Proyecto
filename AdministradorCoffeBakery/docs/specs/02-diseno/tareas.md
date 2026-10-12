@@ -16,10 +16,10 @@
 | D-09 | Definir catálogo de componentes y tema (colores de estado ok/bajo/agotado) | ⬜ | Guía de UI |
 | D-10 | Definir `queryClient` (staleTime, persistencia, política offline) | ⬜ | Especificación |
 | D-11 | Revisar índices con `EXPLAIN` en la consulta de inventario y en el historial | ⬜ | Informe |
-| D-12 | Configurar Expo Router: instalar dependencias, `main: expo-router/entry`, `scheme`, plugin, `typedRoutes` y alias `@/*` | ⬜ | `npx expo start` arranca con rutas |
-| D-13 | Crear el árbol `src/app` con layouts y rutas delgadas (re-export de features) | ⬜ | Mapa de rutas de §2.2 completo |
-| D-14 | Implementar guardas: `(auth)`, `(app)`, `SoloAdmin` y pantalla `ErrorPerfil` | ⬜ | Sin sesión → login; barista en ruta admin → dashboard |
-| D-15 | Migrar pantallas existentes a `useRouter`/`useLocalSearchParams` (ADR-06); eliminar `App.tsx`, `index.ts` clásico y `src/navigation/*` | ⬜ | Sin imports de `@react-navigation` para navegar |
+| D-12 | Configurar Expo Router: instalar dependencias, `main: expo-router/entry`, `scheme`, plugin, `typedRoutes` y alias `@/*` | 🔄 | `npx expo start` arranca con rutas |
+| D-13 | Crear el árbol `src/app` con layouts y rutas delgadas (re-export de features) | 🔄 | Mapa de rutas de §2.2 completo |
+| D-14 | Implementar guardas: `(auth)`, `(app)`, `SoloAdmin` y pantalla `ErrorPerfil` | 🔄 | Sin sesión → login; barista en ruta admin → dashboard |
+| D-15 | Migrar pantallas existentes a `useRouter`/`useLocalSearchParams` (ADR-06); eliminar `App.tsx`, `index.ts` clásico y `src/navigation/*` | 🔄 | Sin imports de `@react-navigation` para navegar |
 | D-16 | Consolidar tipos: mover `/types/supabase.ts` a `src/types/` (UTF-8), derivar `database.ts` de los generados y eliminar el duplicado | ⬜ | `tsc --noEmit` sin errores |
 | D-17 | Versionar la base en el repo: `supabase/migrations/<timestamp>_0002_endurecimiento.sql`, `supabase db pull` para la 0001; crear `supabase/functions` y `supabase/tests` | ⬜ | `supabase db reset` reproduce el esquema |
 | D-18 | Higiene del repo: `.gitignore` con `.env`, `.expo/` y `supabase/.temp/`; `.env.example` completo (URL y anon key) | ⬜ | Sin secretos ni temporales versionados |

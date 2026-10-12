@@ -193,9 +193,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useRouter } from "expo-router";
 import { useAuthStore } from "./authStore";
-import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import type { AuthStackParamList } from "../../navigation/AuthStack";
 import { theme } from "../../theme/theme";
 
 const esquemaLogin = z.object({
@@ -204,9 +203,8 @@ const esquemaLogin = z.object({
 });
 
 type FormValues = z.infer<typeof esquemaLogin>;
-type Props = NativeStackScreenProps<AuthStackParamList, "Login">;
-
-export function LoginScreen({ navigation }: Props) {
+export function LoginScreen() {
+  const router = useRouter();
   const iniciarSesion = useAuthStore((estado) => estado.iniciarSesion);
 
   const {
@@ -308,7 +306,7 @@ export function LoginScreen({ navigation }: Props) {
 
             <TouchableOpacity
               style={styles.linkContainer}
-              onPress={() => navigation.navigate("Registro")}
+              onPress={() => router.push("/register")}
               activeOpacity={0.7}
             >
               <Text style={styles.linkText}>

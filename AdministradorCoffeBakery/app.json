@@ -3,6 +3,7 @@
     "name": "AdministradorCoffeBakery",
     "slug": "AdministradorCoffeBakery",
     "version": "1.0.0",
+    "scheme": "poscafe",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -23,7 +24,11 @@
     },
     "plugins": [
       "expo-sqlite",
-      "expo-mail-composer"
-    ]
+      "expo-mail-composer",
+      "expo-router"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
   }
 }
