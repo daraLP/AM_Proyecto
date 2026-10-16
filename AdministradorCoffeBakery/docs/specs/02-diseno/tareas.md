@@ -24,3 +24,4 @@
 | D-17 | Versionar la base en el repo: `supabase/migrations/<timestamp>_0002_endurecimiento.sql`, `supabase db pull` para la 0001; crear `supabase/functions` y `supabase/tests` | ⬜ | `supabase db reset` reproduce el esquema |
 | D-18 | Higiene del repo: `.gitignore` con `.env`, `.expo/` y `supabase/.temp/`; `.env.example` completo (URL y anon key) | ⬜ | Sin secretos ni temporales versionados |
 | D-19 | Guardar `Specs_POSCafe.md` y ADR en `docs/` | ⬜ | Documentación versionada |
+| D-20 | Migración 0003: los baristas crean y editan insumos (RN-10 modificada) | 🔄 | `supabase/migrations/20261015000000_baristas_editan_insumos.sql` aplicada; falta validar la app |

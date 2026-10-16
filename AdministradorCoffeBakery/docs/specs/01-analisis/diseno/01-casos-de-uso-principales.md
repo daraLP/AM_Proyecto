@@ -38,4 +38,4 @@
 
 **CU-05: Registro y rol.** Registro con nombre/correo/contraseña → el servidor crea el perfil (primer usuario `administrador`, resto `barista`) → si hay confirmación de correo, se informa.
 
-**CU-06: Administración.** El administrador crea/edita/desactiva insumos (stock inicial por movimiento), proveedores (con coordenadas y asociaciones), categorías y usuarios (cambia roles).
+**CU-06: Administración.** Administrador y barista crean y editan insumos (stock inicial por movimiento). Solo el administrador desactiva insumos y gestiona proveedores (con coordenadas y asociaciones), categorías y usuarios (cambia roles).

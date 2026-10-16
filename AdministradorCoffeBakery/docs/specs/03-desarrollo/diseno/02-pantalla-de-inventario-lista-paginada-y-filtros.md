@@ -10,4 +10,4 @@
 | Filtros | Chips de categoría (desde `categorias`) y de estado (Todos / Bajo / Agotado) |
 | Búsqueda | `ilike('nombre', '%q%')` con *debounce* de 300 ms |
 | Fila | `InsumoCard` memoizada: nombre, stock + unidad, `StockBadge` por `estado_stock`, foto |
-| Permisos | «+ Agregar» y «Editar» solo para `useEsAdmin()`; toque en la fila abre `InsumoDetalle` |
+| Permisos | «+ Agregar» y «Editar» para todos los usuarios; «Desactivar» solo para `useEsAdmin()`; toque en la fila abre `InsumoDetalle` |

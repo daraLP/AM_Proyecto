@@ -10,4 +10,4 @@
 | RD-03 | Capa de servicios única que encapsula Supabase; hooks de datos sobre ella; componentes sin lógica de acceso a datos. |
 | RD-04 | Tipos de BD generados y un único cliente Supabase con sesión persistente. |
 | RD-05 | Contratos de API explícitos con errores traducibles. |
-| RD-06 | Almacenamiento de fotos en bucket `fotos-insumos` con escritura solo para administradores. |
+| RD-06 | Almacenamiento de fotos en bucket `fotos-insumos` con subida y reemplazo para usuarios autenticados y borrado solo para administradores. |

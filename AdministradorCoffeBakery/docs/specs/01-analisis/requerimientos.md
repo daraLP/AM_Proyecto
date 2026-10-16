@@ -16,7 +16,7 @@
 | RN-07 | `stock_actual <= stock_minimo` ⇒ ítem automático; `stock_actual <= 0` ⇒ «Agotado». | Trigger `insumos_stock_bajo` + columna generada `estado_stock` | Badge por `estado_stock` |
 | RN-08 | Marcar «comprado» cierra el ítem y reintegra stock (idempotente). | `comprar_item` | Modal de confirmación de cantidad |
 | RN-09 | El rol no es autoasignable; el primer usuario es administrador. | `manejar_nuevo_usuario` (ignora metadata) + trigger `perfiles_proteger_rol` | `signUp` sin `rol` |
-| RN-10 | Administrador: CRUD de insumos, proveedores y categorías. Barista: lectura, movimientos, agregar ítems manuales y marcar comprado. | RLS con `es_admin()` | `useEsAdmin()` oculta acciones (solo UX) |
+| RN-10 | Administrador: CRUD de insumos (incluye desactivar), proveedores y categorías, reportes y usuarios. Barista: **crear y editar insumos** (con stock inicial 0; sin cambiar `stock_actual` ni desactivar o borrar), registrar movimientos, agregar ítems manuales y marcar comprado. | RLS: `admin_escribe_insumos` + `baristas_crean_insumos` / `baristas_editan_insumos` (migración `20261015000000`) | `useEsAdmin()` oculta solo desactivar/eliminar (UX) |
 | RN-11 | El historial es inmutable; los insumos se desactivan, no se borran. | FK `RESTRICT`; sin políticas UPDATE/DELETE | `desactivarInsumo` |
 | RN-12 | El push se envía solo al insertar un ítem `origen = 'auto'`. | Webhook sobre `INSERT` + `ON CONFLICT DO NOTHING` | Edge Function filtra `origen` |
 | RN-13 | Proveedores sin coordenadas no se muestran en el mapa. | `proveedores_cercanos` filtra nulos | Aviso en ficha del proveedor |
@@ -33,7 +33,7 @@
 | RF-06 | Detalle de insumo con foto, unidad, stock e historial reciente. | M |
 | RF-07 | Registrar movimiento con contador rápido, incrementos configurables y motivo con chips. | M |
 | RF-08 | Historial de movimientos por insumo (fecha, usuario, cantidad, motivo, saldo). | M |
-| RF-09 | CRUD de insumos con foto (administrador). | M |
+| RF-09 | Crear y editar insumos con foto (administrador y barista); desactivar insumos (solo administrador). | M |
 | RF-10 | CRUD de proveedores y asociación con insumos (administrador). | M |
 | RF-11 | Lista de compras: automática y manual, checkboxes, confirmación de compra con reintegro. | M |
 | RF-12 | Mapa de proveedores cercanos con distancia desde la ubicación del usuario. | M |

@@ -22,7 +22,7 @@ Diseño completo: `docs/SDD_POSCafé.md`. Especificaciones por fase: `docs/specs
 6. Todo acceso a Supabase vive en `src/services/*.ts`. Las pantallas y componentes no importan el cliente.
 7. Un único cliente: `src/lib/supabaseClient.ts`. Tipos generados en `src/types/database.types.ts` (UTF-8). No edites los tipos generados a mano.
 8. Idempotencia: genera un `opId` (`generarUuid()`) al abrir el modal de movimiento/compra y **reutilízalo** en reintentos como `p_client_op_id`.
-9. Baja lógica: los insumos se desactivan (`activo = false`), no se borran.
+9. Baja lógica: los insumos se desactivan (`activo = false`), no se borran. Solo el administrador puede desactivarlos; los baristas pueden crear y editar insumos (RN-10).
 10. Secretos: nunca uses la `service_role` en la app; `.env` no se versiona; solo variables `EXPO_PUBLIC_*` en el cliente.
 11. **Cambios de base de datos solo mediante archivos** en `supabase/migrations/`. Pruébalos en local (`supabase start` + `supabase db reset`). No ejecutes SQL destructivo contra el proyecto remoto.
 12. Los parámetros de Expo Router son *strings*: pasa `id`, no objetos, y consulta el dato en la pantalla de destino.

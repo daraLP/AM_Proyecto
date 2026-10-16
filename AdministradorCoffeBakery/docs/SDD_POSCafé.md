@@ -166,7 +166,7 @@ app/
 │  │  │  ├─ _layout.tsx             # Stack
 │  │  │  ├─ index.tsx               # FlatList infinita + filtros + buscador
 │  │  │  ├─ [supplyId].tsx          # Detalle de insumo (stepper)
-│  │  │  └─ edit.tsx                # Crear/Editar insumo (solo admin; ?id= para editar)
+│  │  │  └─ edit.tsx                # Crear/Editar insumo (admin y barista; ?id= para editar)
 │  │  ├─ shopping/
 │  │  │  ├─ _layout.tsx             # Stack
 │  │  │  ├─ index.tsx               # TODO list + mapa de proveedores cercanos
@@ -277,7 +277,7 @@ export function QuickCounter({ current, unit, quick, onChange }: Props) {
 - Lectura: siempre desde caché persistida, con indicador "Sin conexión".
 - Escritura: `registrar_movimiento` se encola con `client_op_id = uuid`. Al reconectar se reenvía. Los movimientos son **deltas conmutativos** y la RPC es idempotente, por lo que el orden y los reintentos no corrompen el stock.
 - Si al sincronizar el stock resulta insuficiente (`stock_insuficiente`), se notifica al usuario y se muestra el movimiento como fallido para reintentar o ajustar.
-- El CRUD de insumos/proveedores (admin) requiere conexión.
+- La creación y edición de insumos y proveedores requiere conexión.
 
 **Cliente Supabase**
 
@@ -500,28 +500,30 @@ $$;
 | | `admin_escribe_*` | ALL | `es_admin()` |
 | `insumos` | `lectura_insumos` | SELECT | `activo OR es_admin()` |
 | | `admin_escribe_insumos` | ALL | `es_admin()`. `stock_actual` protegido por trigger `insumos_proteger_stock` |
+| | `baristas_crean_insumos` | INSERT | Usuario con perfil, `stock_actual = 0` y `activo = true` (migración 0003) |
+| | `baristas_editan_insumos` | UPDATE | Insumos activos; la fila resultante debe seguir activa (no pueden desactivar) |
 | `movimientos_inventario` | `lectura_movimientos` | SELECT | Todos. **Sin políticas de INSERT/UPDATE/DELETE**: solo `registrar_movimiento` / `comprar_item` |
 | `lista_compras` | `lectura_lista_compras` | SELECT | Todos |
 | | `insertar_lista_manual` | INSERT | `origen = 'manual' AND estado = 'pendiente' AND creado_por = auth.uid()` |
 | | `admin_escribe_lista_compras` | ALL | `es_admin()`. Marcar comprado va por `comprar_item` |
 | `push_tokens` | `tokens_propios` | ALL | `usuario_id = auth.uid()` |
-| `storage.objects` (`fotos-insumos`) | lectura / admin | SELECT / ALL | Lectura autenticada; escritura solo `es_admin()` |
+| `storage.objects` (`fotos-insumos`) | lectura / admin / baristas | SELECT / ALL / INSERT y UPDATE | Lectura autenticada; subir y reemplazar: autenticados; borrar: solo `es_admin()` |
 
 **Matriz de permisos**
 
 | Recurso | Administrador | Barista |
 |---|---|---|
-| Insumos | CRUD (stock solo vía movimientos) | Solo lectura |
+| Insumos | CRUD y desactivar (stock solo vía movimientos) | Crear (stock 0) y editar; no desactiva ni borra |
 | Proveedores y relación con insumos | CRUD | Solo lectura |
 | Movimientos de stock | Leer + `registrar_movimiento` | Leer + `registrar_movimiento` |
 | Lista de compras | Todo | Leer, agregar manual, marcar comprado (RPC) |
 | Reportes | `consumo_por_insumo` y dashboard | Solo dashboard y gráfico semanal |
 | Usuarios y roles | Gestión completa | Solo su propio perfil (sin cambiar rol) |
-| Fotos (Storage) | Subir / borrar | Solo lectura |
+| Fotos (Storage) | Subir / borrar | Subir y reemplazar (no borrar) |
 
 ### 4.4 Storage (fotos de insumos)
 
-Bucket `fotos-insumos` (público para lectura de URL, 2 MB máx., `image/jpeg|png|webp`). Escritura restringida a administradores por política. La app comprime la imagen (`expo-image-manipulator`, máx. 1024 px), la sube como `<insumo_id>.jpg` y guarda la **URL pública** en `insumos.foto_url`.
+Bucket `fotos-insumos` (público para lectura de URL, 2 MB máx., `image/jpeg|png|webp`). Subida y reemplazo para usuarios autenticados; borrado solo para administradores. La app comprime la imagen (`expo-image-manipulator`, máx. 1024 px), la sube como `<insumo_id>.jpg` y guarda la **URL pública** en `insumos.foto_url`.
 
 ### 4.5 Decisiones de diseño sobre el esquema
 
@@ -872,7 +874,7 @@ supabase.from('movimientos_inventario')
   .select('id,tipo,cantidad,motivo,nota,saldo_resultante,creado_en,perfiles(nombre)')
   .eq('insumo_id', id).order('creado_en', { ascending: false }).limit(30);
 
-// Admin: crear insumo (stock_actual NO se envía) + stock inicial por movimiento
+// Admin y barista: crear insumo (stock_actual NO se envía) + stock inicial por movimiento
 const { data: insumo } = await supabase.from('insumos')
   .insert({ nombre, categoria_id, unidad_medida, stock_minimo, proveedor_principal_id, foto_url })
   .select().single();
@@ -882,7 +884,7 @@ if (stockInicial > 0) {
   });
 }
 
-// Admin: editar (nunca incluir stock_actual: el trigger lo rechaza) y baja lógica
+// Admin y barista: editar (nunca incluir stock_actual: el trigger lo rechaza). Solo admin: baja lógica
 supabase.from('insumos').update({ nombre, categoria_id, stock_minimo }).eq('id', id);
 supabase.from('insumos').update({ activo: false }).eq('id', id);
 

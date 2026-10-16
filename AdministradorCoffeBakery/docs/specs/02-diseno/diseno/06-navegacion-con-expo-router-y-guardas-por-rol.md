@@ -23,13 +23,13 @@
 | `/dashboard/reports` | `…/dashboard/reports.tsx` | Stack | **Solo administrador** |
 | `/inventario` | `…/inventario/index.tsx` | Tab | Admin y barista (acciones de edición solo admin) |
 | `/inventario/[insumoId]` | `…/inventario/[insumoId].tsx` | Stack | Admin y barista (detalle + contador rápido) |
-| `/inventario/form?id=` | `…/inventario/form.tsx` | Stack | **Solo administrador** |
+| `/inventario/form?id=` | `…/inventario/form.tsx` | Stack | **Administrador y barista** |
 | `/compras` | `…/compras/index.tsx` | Tab | Admin y barista (lista + mapa) |
 | `/compras/proveedor/[proveedorId]` | `…/compras/proveedor/[proveedorId].tsx` | Stack | Lectura: todos; edición: admin |
 | `/perfil` | `…/perfil/index.tsx` | Tab | Admin y barista |
 | `/perfil/usuarios` | `…/perfil/usuarios.tsx` | Stack | **Solo administrador** (gestión de roles) |
 | `/movimiento-modal?insumoId=` | `(app)/movimiento-modal.tsx` | Modal | Admin y barista |
-| `/scan-modal` | `(app)/scan-modal.tsx` | Modal | Solo administrador |
+| `/scan-modal` | `(app)/scan-modal.tsx` | Modal | Administrador y barista |
 | `/confirmar-compra-modal?itemId=` | `(app)/confirmar-compra-modal.tsx` | Modal | Admin y barista |
 
 **Guardas (capa 1, UX; la seguridad real son RLS y RPC)**
@@ -59,7 +59,7 @@ export default function AppLayout() {
   );
 }
 
-// src/components/SoloAdmin.tsx (se envuelve en reports, form, usuarios y scan-modal)
+// src/components/SoloAdmin.tsx (se envuelve en reports y usuarios)
 export function SoloAdmin({ children }: { children: React.ReactNode }) {
   const esAdmin = useEsAdmin();
   return esAdmin ? <>{children}</> : <Redirect href="/dashboard" />;

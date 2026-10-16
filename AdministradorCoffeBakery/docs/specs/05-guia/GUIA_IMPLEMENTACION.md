@@ -64,9 +64,9 @@ Esta guía te lleva de tu repositorio actual a la app terminada, en **hitos** pe
 **Tareas:** DEV-11, DEV-12, DEV-13, DEV-14 · **Lee:** `03-desarrollo/diseno/02-…`, `02-diseno/diseno/03-seguridad-rls-resumen.md`
 
 **Prompt:**
-> Implementa DEV-11 a DEV-14: inventario paginado de 20 en 20 con filtros por categoría y estado y búsqueda con debounce (TanStack Query, `useInfiniteQuery`), formulario de insumo que **no envía `stock_actual`** (el stock inicial se registra con `registrar_movimiento`), CRUD de proveedores y categorías, y subida de foto al bucket `fotos-insumos`. Los botones de edición solo para administradores.
+> Implementa DEV-11 a DEV-14: inventario paginado de 20 en 20 con filtros por categoría y estado y búsqueda con debounce (TanStack Query, `useInfiniteQuery`), formulario de insumo que **no envía `stock_actual`** (el stock inicial se registra con `registrar_movimiento`), CRUD de proveedores y categorías, y subida de foto al bucket `fotos-insumos`. Todos los usuarios pueden crear y editar insumos; solo el administrador puede desactivarlos (RN-10).
 
-**Verifica:** un barista no ve «Agregar/Editar» y, aunque llamara a la API, la base lo rechaza · crear insumo con stock inicial deja un movimiento en el historial.
+**Verifica:** un barista puede crear y editar, pero la base rechaza editar el stock y desactivar insumos · crear insumo con stock inicial deja un movimiento en el historial.
 
 ## Hito 5: Lista de compras
 
