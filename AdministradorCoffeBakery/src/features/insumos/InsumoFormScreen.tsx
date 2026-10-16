@@ -4,7 +4,6 @@
 // import { zodResolver } from "@hookform/resolvers/zod";
 // import { z } from "zod";
 // import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-// import { supabase } from "../../lib/supabaseClient";
 // import type { InventarioStackParamList } from "../../navigation/InventarioStack";
 
 // const esquemaInsumo = z.object({

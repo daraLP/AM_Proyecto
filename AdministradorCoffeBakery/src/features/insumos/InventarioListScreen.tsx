@@ -13,6 +13,7 @@ import { listarInsumos } from "../../services/insumos";
 import { useEsAdmin } from "../auth/authStore";
 import type { Insumo } from "../../types/database";
 import { theme } from "../../theme/theme";
+import { StockBadge } from "../../components/StockBadge";
 
 export function InventarioListScreen() {
   const router = useRouter();
@@ -77,8 +78,6 @@ export function InventarioListScreen() {
         }
         renderItem={({ item }) => {
           const stockBajo = item.estado_stock !== "ok";
-          const etiqueta =
-            item.estado_stock === "agotado" ? "AGOTADO" : "STOCK BAJO";
 
           return (
             <View style={styles.card}>
@@ -91,9 +90,7 @@ export function InventarioListScreen() {
                   {item.nombre}
                 </Text>
                 {stockBajo && (
-                  <View style={styles.badgeDanger}>
-                    <Text style={styles.badgeDangerText}>{etiqueta}</Text>
-                  </View>
+                  <StockBadge estado={item.estado_stock} />
                 )}
               </View>
 

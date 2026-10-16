@@ -10,7 +10,7 @@ Dependencias principales: DEV-01 → DEV-02 → (DEV-05…DEV-24). Las tareas de
 | DEV-01 | Cliente Supabase único con sesión persistente (AsyncStorage, `autoRefreshToken`) y *polyfill* de URL | 🔄 | ADR-03 | Una sola instancia; sesión se mantiene al reabrir |
 | DEV-02 | `authStore` (sin `rol` en `signUp`, sin `await` en `onAuthStateChange`) y guard de rutas | 🔄 | DEV-01 | Login/registro funcionan; el perfil carga sin bloqueos |
 | DEV-03 | Capa de servicios: `insumos`, `movimientos`, `compras`, `proveedores`, `dashboard` | 🔄 | D-04 | Sin acceso a Supabase fuera de `services/` |
-| DEV-04 | `queryClient` + persistencia + `onlineManager` (NetInfo) | ⬜ | ADR-02 | Lectura offline y mutaciones pausadas |
+| DEV-04 | `queryClient` + persistencia + `onlineManager` (NetInfo) | 🔄 | ADR-02 | Lectura offline y mutaciones pausadas |
 | DEV-05 | Componente `QuickCounter` | ⬜ | D-09 | Cumple las reglas de §3.2 |
 | DEV-06 | Componente `ReasonChips` y constante `MOTIVOS` | 🔄 | n/a | Los valores coinciden con el CHECK |
 | DEV-07 | Hook `useRegistrarMovimiento` (optimista, rollback, `opId`) | ⬜ | DEV-03, DEV-04 | Error revierte el stock mostrado |
@@ -35,8 +35,8 @@ Dependencias principales: DEV-01 → DEV-02 → (DEV-05…DEV-24). Las tareas de
 | DEV-26 | `app.config.ts`, `eas.json`, permisos y claves de mapas | ⬜ | n/a | Build de desarrollo instala |
 | DEV-27 | Builds EAS (`development`, `preview`, `production`) y secretos | ⬜ | DEV-26 | APK de `preview` funcional |
 | DEV-28 | Limpiar duplicados: cliente único ya confirmado; eliminar `/types/supabase.ts` tras mover los tipos | 🔄 | D-16 | Sin referencias huérfanas |
-| DEV-29 | `providers/AppProviders.tsx`: `QueryClientProvider` con persistencia (AsyncStorage) y `onlineManager` | ⬜ | DEV-04 | Caché sobrevive al reinicio |
-| DEV-30 | Componentes compartidos: `PantallaCarga`, `EmptyState`, `ErrorState`, `SoloAdmin`, `StockBadge` | ⬜ | D-14 | Usados por todas las pantallas |
+| DEV-29 | `providers/AppProviders.tsx`: `QueryClientProvider` con persistencia (AsyncStorage) y `onlineManager` | 🔄 | DEV-04 | Caché sobrevive al reinicio |
+| DEV-30 | Componentes compartidos: `PantallaCarga`, `EmptyState`, `ErrorState`, `SoloAdmin`, `StockBadge` | 🔄 | D-14 | Usados por todas las pantallas |
 | DEV-31 | Servicios nuevos: `compras.ts`, `proveedores.ts`, `perfiles.ts` (gestión de usuarios) | ⬜ | D-04 | Sin Supabase fuera de `services/` |
 | DEV-32 | Pantalla de gestión de usuarios y roles (`perfil/usuarios`, solo administrador) | ⬜ | DEV-31 | El administrador cambia roles; barista no accede |
 

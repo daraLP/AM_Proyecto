@@ -1,9 +1,7 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Slot } from "expo-router";
 import { useEffect } from "react";
 import { useAuthStore } from "@/features/auth/authStore";
-
-const queryClient = new QueryClient();
+import { AppProviders } from "@/providers/AppProviders";
 
 export default function RootLayout() {
   const inicializar = useAuthStore((estado) => estado.inicializar);
@@ -13,8 +11,8 @@ export default function RootLayout() {
   }, [inicializar]);
 
   return (
-    <QueryClientProvider client={queryClient}>
+    <AppProviders>
       <Slot />
-    </QueryClientProvider>
+    </AppProviders>
   );
 }
