@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import "../lib/netinfo";
 import NetInfo from "@react-native-community/netinfo";
 
 function estadoIndicaConexion(

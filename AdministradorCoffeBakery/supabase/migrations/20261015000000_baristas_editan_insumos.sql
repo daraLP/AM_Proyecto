@@ -41,3 +41,4 @@ create policy fotos_insumos_baristas_actualizar on storage.objects
   with check (bucket_id = 'fotos-insumos');
 
 commit;
+

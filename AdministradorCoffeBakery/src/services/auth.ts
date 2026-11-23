@@ -1,18 +1,10 @@
 import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
 import { AppState, type AppStateStatus } from "react-native";
 import { supabase } from "../lib/supabaseClient";
+import { mensajeDeError } from "../utils/errores";
 
-function traducirErrorAuth(error: { message: string; code?: string }): string {
-  if (error.code === "invalid_credentials") {
-    return "El correo o la contraseña no son correctos.";
-  }
-  if (error.code === "user_already_exists") {
-    return "Ya existe una cuenta con este correo.";
-  }
-  if (error.message.toLowerCase().includes("email not confirmed")) {
-    return "Debes confirmar tu correo antes de iniciar sesión.";
-  }
-  return error.message;
+function traducirErrorAuth(error: unknown): string {
+  return mensajeDeError(error);
 }
 
 export function suscribirseACambiosAuth(

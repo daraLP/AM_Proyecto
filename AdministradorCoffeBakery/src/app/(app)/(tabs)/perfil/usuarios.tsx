@@ -1,12 +1,10 @@
-import { Text, View } from "react-native";
 import { SoloAdmin } from "@/components/SoloAdmin";
+import { UsuariosScreen } from "@/features/auth/UsuariosScreen";
 
 export default function UsuariosRoute() {
   return (
     <SoloAdmin>
-      <View>
-        <Text>// TODO(DEV-24): implementar gestión de usuarios</Text>
-      </View>
+      <UsuariosScreen />
     </SoloAdmin>
   );
 }

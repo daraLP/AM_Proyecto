@@ -1,0 +1,5 @@
+# Configuración mínima para `supabase start` en local. Ajusta project_id si quieres.
+project_id = "poscafe"
+
+[functions.notify-low-stock]
+verify_jwt = false  # lo invoca el Database Webhook y se autentica con x-webhook-secret

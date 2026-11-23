@@ -1,248 +1,201 @@
-import React, { useCallback, useState } from "react";
+import { useRouter } from "expo-router";
+import React, { useCallback, useMemo, useState } from "react";
 import {
-  StyleSheet,
-  View,
-  FlatList,
-  Text,
-  TouchableOpacity,
   ActivityIndicator,
+  FlatList,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useFocusEffect, useRouter } from "expo-router";
-import { listarInsumos } from "../../services/insumos";
-import { useEsAdmin } from "../auth/authStore";
-import type { Insumo } from "../../types/database";
-import { theme } from "../../theme/theme";
-import { StockBadge } from "../../components/StockBadge";
+import { EmptyState } from "@/components/EmptyState";
+import { ErrorState } from "@/components/ErrorState";
+import { InsumoCard } from "@/components/InsumoCard";
+import { PantallaCarga } from "@/components/PantallaCarga";
+import { useCategorias } from "@/hooks/useCatalogos";
+import { useDebounce } from "@/hooks/useDebounce";
+import { useInsumos } from "@/hooks/useInsumos";
+import type { FiltrosInsumos } from "@/services/insumos";
+import { theme } from "@/theme/theme";
+import type { Insumo } from "@/types/database";
+import { mensajeDeError } from "@/utils/errores";
+
+type FiltroEstado = NonNullable<FiltrosInsumos["estado"]> | null;
+
+const ESTADOS: { label: string; value: FiltroEstado }[] = [
+  { label: "Todos", value: null },
+  { label: "Bajo", value: "bajo" },
+  { label: "Agotado", value: "agotado" },
+];
+
+function Chip({ texto, activo, onPress }: { texto: string; activo: boolean; onPress: () => void }) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityState={{ selected: activo }}
+      onPress={onPress}
+      style={[styles.chip, activo && styles.chipActivo]}
+    >
+      <Text style={[styles.chipTexto, activo && styles.chipTextoActivo]}>{texto}</Text>
+    </Pressable>
+  );
+}
 
 export function InventarioListScreen() {
   const router = useRouter();
-  const [insumos, setInsumos] = useState<Insumo[]>([]);
-  const [cargando, setCargando] = useState(true);
-  const esAdmin = useEsAdmin();
+  const [busqueda, setBusqueda] = useState("");
+  const [categoriaId, setCategoriaId] = useState<string | null>(null);
+  const [estado, setEstado] = useState<FiltroEstado>(null);
+  const busquedaDebounced = useDebounce(busqueda, 300); // RDV-04
 
-  const cargarInsumos = useCallback(async () => {
-    setCargando(true);
-    const { data, error } = await listarInsumos();
-
-    if (error) {
-      console.error("Error al cargar insumos:", error);
-    } else {
-      setInsumos(data);
-    }
-    setCargando(false);
-  }, []);
-
-  useFocusEffect(
-    useCallback(() => {
-      cargarInsumos();
-    }, [cargarInsumos]),
+  const filtros = useMemo<FiltrosInsumos>(
+    () => ({ busqueda: busquedaDebounced, categoriaId, estado }),
+    [busquedaDebounced, categoriaId, estado],
   );
 
-  if (cargando) {
+  const { data: categorias = [] } = useCategorias();
+  const consulta = useInsumos(filtros);
+  const insumos = useMemo<Insumo[]>(() => consulta.data?.pages.flat() ?? [], [consulta.data]);
+
+  const abrirDetalle = useCallback(
+    (insumoId: string) => router.push({ pathname: "/inventario/[insumoId]", params: { insumoId } }),
+    [router],
+  );
+  const renderItem = useCallback(
+    ({ item }: { item: Insumo }) => <InsumoCard insumo={item} onPress={abrirDetalle} />,
+    [abrirDetalle],
+  );
+
+  if (consulta.isLoading) return <PantallaCarga />;
+  if (consulta.isError && insumos.length === 0) {
     return (
-      <SafeAreaView style={styles.centered}>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
-      </SafeAreaView>
+      <ErrorState
+        message={mensajeDeError(consulta.error)}
+        onRetry={() => void consulta.refetch()}
+      />
     );
   }
 
+  const hayFiltros = Boolean(busquedaDebounced.trim() || categoriaId || estado);
+
   return (
     <SafeAreaView style={styles.safeArea} edges={["bottom", "left", "right"]}>
-      {esAdmin && (
-        <View style={styles.headerContainer}>
-          <TouchableOpacity
-            style={styles.addButton}
+      <View style={styles.encabezado}>
+        <View style={styles.filaBusqueda}>
+          <TextInput
+            accessibilityLabel="Buscar insumo"
+            value={busqueda}
+            onChangeText={setBusqueda}
+            placeholder="Buscar insumo…"
+            placeholderTextColor={theme.colors.textMuted}
+            style={styles.busqueda}
+            returnKeyType="search"
+            autoCorrect={false}
+          />
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Agregar insumo"
+            style={styles.agregar}
             onPress={() => router.push("/inventario/form")}
-            activeOpacity={0.7}
           >
-            <Text style={styles.addButtonText}>+ Agregar Insumo</Text>
-          </TouchableOpacity>
+            <Text style={styles.agregarTexto}>+ Agregar</Text>
+          </Pressable>
         </View>
-      )}
+
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
+          {ESTADOS.map((e) => (
+            <Chip key={e.label} texto={e.label} activo={estado === e.value} onPress={() => setEstado(e.value)} />
+          ))}
+        </ScrollView>
+        {categorias.length > 0 && (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
+            <Chip texto="Todas las categorías" activo={categoriaId === null} onPress={() => setCategoriaId(null)} />
+            {categorias.map((c) => (
+              <Chip key={c.id} texto={c.nombre} activo={categoriaId === c.id} onPress={() => setCategoriaId(c.id)} />
+            ))}
+          </ScrollView>
+        )}
+      </View>
 
       <FlatList
         data={insumos}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContent}
+        renderItem={renderItem}
+        contentContainerStyle={styles.lista}
+        ItemSeparatorComponent={() => <View style={{ height: theme.spacing.sm }} />}
         showsVerticalScrollIndicator={false}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyTitle}>Sin inventario</Text>
-            <Text style={styles.emptySubtitle}>
-              {esAdmin
-                ? "Tu almacén está vacío. Agrega tu primer insumo para comenzar."
-                : "Aún no hay insumos registrados."}
-            </Text>
-          </View>
-        }
-        renderItem={({ item }) => {
-          const stockBajo = item.estado_stock !== "ok";
-
-          return (
-            <View style={styles.card}>
-              <View style={styles.cardHeader}>
-                <Text
-                  style={styles.itemName}
-                  numberOfLines={1}
-                  ellipsizeMode="tail"
-                >
-                  {item.nombre}
-                </Text>
-                {stockBajo && (
-                  <StockBadge estado={item.estado_stock} />
-                )}
-              </View>
-
-              <Text style={styles.stockDetails}>
-                Stock:{" "}
-                <Text
-                  style={[
-                    styles.stockValue,
-                    stockBajo && styles.stockValueDanger,
-                  ]}
-                >
-                  {item.stock_actual} {item.unidad_medida}
-                </Text>{" "}
-                (Mín: {item.stock_minimo})
-              </Text>
-
-              {esAdmin && (
-                <TouchableOpacity
-                  style={styles.editButton}
-                  onPress={() =>
-                    router.push({
-                      pathname: "/inventario/form",
-                      params: { id: item.id },
-                    })
-                  }
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.editButtonText}>Editar Insumo</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          );
+        onEndReachedThreshold={0.5}
+        onEndReached={() => {
+          if (consulta.hasNextPage && !consulta.isFetchingNextPage) void consulta.fetchNextPage();
         }}
+        refreshControl={
+          <RefreshControl
+            refreshing={consulta.isRefetching && !consulta.isFetchingNextPage}
+            onRefresh={() => void consulta.refetch()}
+            tintColor={theme.colors.primary}
+          />
+        }
+        ListEmptyComponent={
+          <EmptyState
+            title={hayFiltros ? "Sin resultados" : "Sin inventario"}
+            message={
+              hayFiltros
+                ? "Prueba con otros filtros o con otra búsqueda."
+                : "Aún no hay insumos. Agrega el primero para comenzar."
+            }
+          />
+        }
+        ListFooterComponent={
+          consulta.isFetchingNextPage ? (
+            <ActivityIndicator style={styles.pie} color={theme.colors.primary} />
+          ) : undefined
+        }
       />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  centered: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: theme.colors.background,
-  },
-  headerContainer: {
-    paddingHorizontal: theme.spacing.md,
-    paddingTop: theme.spacing.sm,
-    paddingBottom: theme.spacing.xs,
-  },
-  addButton: {
-    backgroundColor: theme.colors.primary,
-    paddingVertical: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.md,
-    borderRadius: theme.borderRadius.md,
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: 44,
-  },
-  addButtonText: {
-    color: theme.colors.white,
-    fontSize: theme.fontSize.sm,
-    fontWeight: "700",
-  },
-  listContent: {
-    padding: theme.spacing.md,
-    flexGrow: 1,
-  },
-  card: {
+  safeArea: { backgroundColor: theme.colors.background, flex: 1 },
+  encabezado: { gap: theme.spacing.sm, paddingHorizontal: theme.spacing.md, paddingTop: theme.spacing.sm },
+  filaBusqueda: { alignItems: "center", flexDirection: "row", gap: theme.spacing.sm },
+  busqueda: {
     backgroundColor: theme.colors.surface,
-    padding: theme.spacing.md,
-    borderRadius: theme.borderRadius.md,
-    marginBottom: theme.spacing.md,
-    borderWidth: 1,
     borderColor: theme.colors.border,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
-  },
-  cardHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: theme.spacing.xs,
-    gap: theme.spacing.xs,
-  },
-  itemName: {
+    borderRadius: theme.borderRadius.md,
+    borderWidth: 1,
+    color: theme.colors.textPrimary,
     flex: 1,
     fontSize: theme.fontSize.md,
-    fontWeight: "700",
-    color: theme.colors.textPrimary,
+    minHeight: 48,
+    paddingHorizontal: theme.spacing.md,
   },
-  badgeDanger: {
-    backgroundColor: theme.colors.errorLight,
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: 2,
-    borderRadius: theme.borderRadius.pill,
-  },
-  badgeDangerText: {
-    color: theme.colors.error,
-    fontSize: theme.fontSize.xs,
-    fontWeight: "700",
-  },
-  stockDetails: {
-    fontSize: theme.fontSize.sm,
-    color: theme.colors.textSecondary,
-    marginBottom: theme.spacing.md,
-  },
-  stockValue: {
-    fontWeight: "700",
-    color: theme.colors.textPrimary,
-  },
-  stockValueDanger: {
-    color: theme.colors.error,
-  },
-  editButton: {
-    backgroundColor: theme.colors.background,
-    paddingVertical: theme.spacing.sm,
-    borderRadius: theme.borderRadius.sm,
+  agregar: {
     alignItems: "center",
+    backgroundColor: theme.colors.primary,
+    borderRadius: theme.borderRadius.md,
     justifyContent: "center",
-    borderWidth: 1,
+    minHeight: 48,
+    paddingHorizontal: theme.spacing.md,
+  },
+  agregarTexto: { color: theme.colors.white, fontSize: theme.fontSize.sm, fontWeight: "700" },
+  chips: { gap: theme.spacing.sm, paddingVertical: 2 },
+  chip: {
+    backgroundColor: theme.colors.surface,
     borderColor: theme.colors.border,
-    minHeight: 44,
-  },
-  editButtonText: {
-    color: theme.colors.textPrimary,
-    fontSize: theme.fontSize.sm,
-    fontWeight: "600",
-  },
-  emptyContainer: {
-    flex: 1,
+    borderRadius: theme.borderRadius.pill,
+    borderWidth: 1,
     justifyContent: "center",
-    alignItems: "center",
-    paddingVertical: theme.spacing.xxl,
+    minHeight: 40,
+    paddingHorizontal: theme.spacing.md,
   },
-  emptyTitle: {
-    fontSize: theme.fontSize.lg,
-    fontWeight: "700",
-    color: theme.colors.textPrimary,
-    marginBottom: theme.spacing.xs,
-  },
-  emptySubtitle: {
-    fontSize: theme.fontSize.sm,
-    color: theme.colors.textSecondary,
-    textAlign: "center",
-    paddingHorizontal: theme.spacing.lg,
-  },
+  chipActivo: { backgroundColor: theme.colors.primaryLight, borderColor: theme.colors.primary },
+  chipTexto: { color: theme.colors.textSecondary, fontSize: theme.fontSize.sm, fontWeight: "600" },
+  chipTextoActivo: { color: theme.colors.primaryDark },
+  lista: { padding: theme.spacing.md, paddingBottom: theme.spacing.xl },
+  pie: { padding: theme.spacing.md },
 });

@@ -9,6 +9,7 @@ import {
 } from "../../services/auth";
 import { obtenerPerfil } from "../../services/perfiles";
 import { limpiarCachePersistida } from "../../lib/queryClient";
+import { desregistrarPush } from "../../lib/notifications";
 
 interface AuthState {
   session: Session | null;
@@ -86,6 +87,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     registrarse(correo, contrasena, nombre),
 
   cerrarSesion: async () => {
+    // Antes de cerrar la sesión (la RLS de push_tokens exige estar autenticado)
+    await desregistrarPush();
     const { error } = await cerrarSesion();
     if (error) {
       console.error("Error al cerrar sesión:", error);

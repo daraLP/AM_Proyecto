@@ -1,6 +1,6 @@
-import { Button } from "react-native";
-import { useAuthStore } from "@/features/auth/authStore";
+import { Boton } from "@/components/Boton";
 import { ErrorState } from "@/components/ErrorState";
+import { useAuthStore } from "@/features/auth/authStore";
 
 export function ErrorPerfil() {
   const cargarPerfil = useAuthStore((estado) => estado.cargarPerfil);
@@ -9,12 +9,13 @@ export function ErrorPerfil() {
 
   return (
     <ErrorState
-      message="No se pudo cargar tu perfil"
+      title="No pudimos cargar tu perfil"
+      message="Reintenta; si sigue igual, cierra sesión y vuelve a entrar. Si el problema continúa, avísale a un administrador."
       onRetry={() => {
         if (session) void cargarPerfil(session.user.id);
       }}
     >
-      <Button title="Cerrar sesión" onPress={() => void cerrarSesion()} />
+      <Boton titulo="Cerrar sesión" variante="secundario" onPress={() => void cerrarSesion()} />
     </ErrorState>
   );
 }

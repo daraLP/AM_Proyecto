@@ -6,6 +6,7 @@ import {
   queryClient,
   queryPersister,
 } from "@/lib/queryClient";
+import { FeedbackProvider } from "./FeedbackProvider";
 
 export function AppProviders({ children }: { children: ReactNode }) {
   return (
@@ -19,8 +20,12 @@ export function AppProviders({ children }: { children: ReactNode }) {
           shouldDehydrateQuery: (query) => query.state.status === "success",
         },
       }}
+      onSuccess={() => {
+        // Reenvía los movimientos que quedaron en cola sin conexión (RNF-02)
+        void queryClient.resumePausedMutations();
+      }}
     >
-      {children}
+      <FeedbackProvider>{children}</FeedbackProvider>
     </PersistQueryClientProvider>
   );
 }

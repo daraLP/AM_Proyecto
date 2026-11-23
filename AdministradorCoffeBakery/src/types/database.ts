@@ -1,25 +1,3 @@
-// export type UnidadMedida = "kg" | "litros" | "unidades" | "cajas";
-// export type Rol = "administrador" | "barista";
-
-// export interface Perfil {
-//   id: string;
-//   nombre: string;
-//   rol: Rol;
-// }
-
-// export interface Insumo {
-//   id: string;
-//   nombre: string;
-//   categoria_id: string | null;
-//   unidad_medida: UnidadMedida;
-//   stock_actual: number;
-//   stock_minimo: number;
-//   proveedor_principal_id: string | null;
-//   foto_url: string | null;
-//   creado_en: string;
-//   actualizado_en: string;
-// }
-
 import type { Database } from "./database.types";
 
 type Tablas = Database["public"]["Tables"];
@@ -62,4 +40,42 @@ export type ListaCompra = Omit<
 > & {
   estado: "pendiente" | "comprado";
   origen: "auto" | "manual";
+};
+
+export type Categoria = Tablas["categorias"]["Row"];
+export type Proveedor = Tablas["proveedores"]["Row"];
+export type PushToken = Tablas["push_tokens"]["Row"];
+
+// Ítem de la lista de compras con el insumo y el proveedor ya resueltos (join)
+export type ItemCompra = ListaCompra & {
+  insumos: Pick<Insumo, "id" | "nombre" | "unidad_medida" | "stock_actual" | "stock_minimo"> | null;
+  proveedores: Pick<Proveedor, "id" | "nombre"> | null;
+};
+
+// Movimiento con el nombre de quien lo registró
+export type MovimientoConUsuario = MovimientoInventario & {
+  perfiles: { nombre: string } | null;
+};
+
+export type ProveedorCercano = {
+  id: string;
+  nombre: string;
+  telefono: string | null;
+  direccion: string | null;
+  latitud: number;
+  longitud: number;
+  distancia_m: number | null;
+};
+
+export const UNIDADES_MEDIDA: readonly { label: string; value: UnidadMedida }[] = [
+  { label: "Kg", value: "kg" },
+  { label: "Litros", value: "litros" },
+  { label: "Unidades", value: "unidades" },
+  { label: "Cajas", value: "cajas" },
+];
+
+// Movimiento con quién lo hizo y sobre qué insumo (pantalla «Actividad del equipo»)
+export type MovimientoActividad = MovimientoInventario & {
+  perfiles: { nombre: string } | null;
+  insumos: { nombre: string; unidad_medida: string } | null;
 };

@@ -1,0 +1,83 @@
+{
+  "expo": {
+    "name": "POSCafé",
+    "slug": "poscafe",
+    "scheme": "poscafe",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "icon": "./assets/icon.png",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.poscafe.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "POSCafé usa tu ubicación para mostrar los proveedores más cercanos.",
+        "NSCameraUsageDescription": "POSCafé usa la cámara para tomar la foto de un insumo.",
+        "NSPhotoLibraryUsageDescription": "POSCafé accede a tus fotos para asignar una imagen a un insumo."
+      },
+      "config": {
+        "googleMapsApiKey": "REEMPLAZA_CON_TU_CLAVE_IOS"
+      }
+    },
+    "android": {
+      "package": "com.poscafe.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#F8F9FA"
+      },
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "CAMERA",
+        "POST_NOTIFICATIONS"
+      ],
+      "config": {
+        "googleMaps": {
+          "apiKey": "REEMPLAZA_CON_TU_CLAVE_ANDROID"
+        }
+      }
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#F8F9FA"
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#2ED573",
+          "defaultChannel": "stock-alerts"
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "POSCafé usa tu ubicación para mostrar los proveedores más cercanos."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "POSCafé accede a tus fotos para asignar una imagen a un insumo.",
+          "cameraPermission": "POSCafé usa la cámara para tomar la foto de un insumo."
+        }
+      ],
+      "expo-font",
+      "expo-asset"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "REEMPLAZA_CON_TU_PROJECT_ID_DE_EAS"
+      }
+    }
+  }
+}
