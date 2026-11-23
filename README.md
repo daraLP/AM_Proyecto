@@ -1,32 +1,57 @@
 # AM_Proyecto
-Proyecto de Aplicaciones Móviles
+Proyecto de Aplicaciones Móviles desarrollado con React Native y Expo.
 
+## Descripción
 
-Librerias utilizadas:
-Backend & Base de datos:
-1. @supabase/supabase-js — Cliente para interactuar con Supabase.
-2. expo-sqlite — Base de datos SQLite nativa para Expo.
+Este proyecto es una aplicación móvil diseñada para ofrecer una experiencia sólida y fluida, integrando persistencia de datos local y remota, navegación estructurada, manejo de estado global y validaciones estrictas de formularios.
 
-Soporte & Compatibility:
-3. react-native-url-polyfill — Polyfill para soporte de la API de URL en React Native.
+## Librerías y Tecnologías Utilizadas
 
-Navegación:
-4. @react-navigation/native — Funcionalidades core de navegación.
-5. @react-navigation/native-stack — Navegación por pilas (Stack Navigator).
-6. @react-navigation/bottom-tabs — Navegación por pestañas inferiores (Bottom Tabs).
-7. react-native-screens — Optimización de pantallas nativas.
-8. react-native-safe-area-context — Manejo del área segura (notches, barras del sistema).
+### Backend y Base de Datos
+* **@supabase/supabase-js**: Cliente oficial para la interacción con los servicios y la base de datos de Supabase.
+* **expo-sqlite**: Base de datos SQLite nativa para almacenamiento local estructurado en Expo.
+* **@react-native-async-storage/async-storage**: Almacenamiento local persistente clave-valor.
 
-Gestión de Estado:
-9. zustand — Librería liviana para manejo del estado global.
+### Soporte y Compatibilidad
+* **react-native-url-polyfill**: Polyfill para asegurar el soporte completo de la API estándar de URL en React Native.
+* **expo-constants**: Acceso a las constantes del sistema y configuraciones en el entorno de Expo.
+* **expo-mail-composer**: Interfaz nativa para redactar y enviar correos electrónicos directamente desde la aplicación.
 
-Formularios & Validación:
-10. react-hook-form — Gestión de estados de formularios.
-11. zod — Esquemas de validación de datos y TypeScript.
-12. @hookform/resolvers — Conector para usar Zod directamente con React Hook Form
+### Navegación
+* **@react-navigation/native**: Infraestructura principal y contenedores para el flujo de navegación.
+* **@react-navigation/native-stack**: Navegación por pila nativa (Stack Navigator).
+* **@react-navigation/bottom-tabs**: Navegación basada en pestañas inferiores (Bottom Tabs).
+* **react-native-screens**: Optimización de rendimiento que utiliza vistas nativas subyacentes.
+* **react-native-safe-area-context**: Manejo adaptativo del área segura (muescas, barras de estado y del sistema).
 
+### Gestión de Estado
+* **zustand**: Biblioteca liviana, rápida y escalable para la administración del estado global de la aplicación.
 
-@react-native-async-storage/async-storage 
-react-native-url-polyfill expo-constants
-expo-mail-composer
- @react-native-async-storage/async-storage
+### Formularios y Validación
+* **react-hook-form**: Gestión eficiente y de alto rendimiento del estado de formularios.
+* **zod**: Declaración de esquemas y validación de tipos de datos.
+* **@hookform/resolvers**: Adaptador para integrar esquemas de validación de Zod con React Hook Form.
+
+## Requisitos Previos
+
+* Node.js (versión LTS recomendada)
+* npm o yarn
+* Expo Go o entorno de emulación configurado (Android Studio / Xcode)
+
+## Instalación
+
+1. Clonar este repositorio:
+```bash
+git clone <URL_DEL_REPOSITORIO>
+cd AM_Proyecto
+```
+
+2. Instalar las dependencias del proyecto:
+```bash
+npm install
+```
+
+3. Iniciar el servidor de desarrollo:
+```bash
+npx expo start
+```
