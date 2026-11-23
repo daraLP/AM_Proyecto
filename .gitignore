@@ -1,1 +1,21 @@
-node_modules
+node_modules/
+.expo/
+dist/
+web-build/
+.env
+.env.*
+!.env.example
+supabase/.temp/
+*.log
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+ios/
+android/
+coverage/
+expo-env.d.ts
+
+# Deno
+deno.lock
