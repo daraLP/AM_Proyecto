@@ -1,189 +1,10 @@
-// import React from "react";
-// import {
-//   StyleSheet,
-//   Text,
-//   TextInput,
-//   TouchableOpacity,
-//   View,
-//   Alert,
-//   ActivityIndicator,
-// } from "react-native";
-// import { useForm, Controller } from "react-hook-form";
-// import { zodResolver } from "@hookform/resolvers/zod";
-// import { z } from "zod";
-// import { useAuthStore } from "./authStore";
-// import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-// import type { AuthStackParamList } from "../../navigation/AuthStack";
-
-// const esquemaLogin = z.object({
-//   correo: z.email({ error: "Correo inválido" }),
-//   contrasena: z.string().min(1, "Ingresa tu contraseña"),
-// });
-
-// type FormValues = z.infer<typeof esquemaLogin>;
-// type Props = NativeStackScreenProps<AuthStackParamList, "Login">;
-
-// export function LoginScreen({ navigation }: Props) {
-//   const iniciarSesion = useAuthStore((estado) => estado.iniciarSesion);
-
-//   const {
-//     control,
-//     handleSubmit,
-//     formState: { errors, isSubmitting },
-//   } = useForm<FormValues>({
-//     resolver: zodResolver(esquemaLogin),
-//     defaultValues: { correo: "", contrasena: "" },
-//   });
-
-//   const onSubmit = async (valores: FormValues) => {
-//     const { error } = await iniciarSesion(valores.correo, valores.contrasena);
-//     if (error) {
-//       Alert.alert("Error al iniciar sesión", error);
-//     }
-//   };
-
-//   return (
-//     <View style={styles.container}>
-//       <View style={styles.card}>
-//         <Text style={styles.title}>Iniciar Sesión</Text>
-//         <Text style={styles.subtitle}>POSCafé</Text>
-
-//         <Controller
-//           control={control}
-//           name="correo"
-//           render={({ field: { onChange, value } }) => (
-//             <TextInput
-//               style={styles.input}
-//               placeholder="Correo electrónico"
-//               placeholderTextColor="#888"
-//               value={value}
-//               onChangeText={onChange}
-//               autoCapitalize="none"
-//               keyboardType="email-address"
-//             />
-//           )}
-//         />
-//         {errors.correo && (
-//           <Text style={styles.error}>{errors.correo.message}</Text>
-//         )}
-
-//         <Controller
-//           control={control}
-//           name="contrasena"
-//           render={({ field: { onChange, value } }) => (
-//             <TextInput
-//               style={styles.input}
-//               placeholder="Contraseña"
-//               placeholderTextColor="#888"
-//               value={value}
-//               onChangeText={onChange}
-//               secureTextEntry
-//             />
-//           )}
-//         />
-//         {errors.contrasena && (
-//           <Text style={styles.error}>{errors.contrasena.message}</Text>
-//         )}
-
-//         <TouchableOpacity
-//           style={styles.button}
-//           onPress={handleSubmit(onSubmit)}
-//           disabled={isSubmitting}
-//         >
-//           {isSubmitting ? (
-//             <ActivityIndicator color="#fff" />
-//           ) : (
-//             <Text style={styles.buttonText}>Entrar</Text>
-//           )}
-//         </TouchableOpacity>
-
-//         <TouchableOpacity
-//           style={styles.linkContainer}
-//           onPress={() => navigation.navigate("Registro")}
-//         >
-//           <Text style={styles.linkText}>¿No tienes cuenta? Regístrate</Text>
-//         </TouchableOpacity>
-//       </View>
-//     </View>
-//   );
-// }
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     backgroundColor: "#f5f6fa",
-//     justifyContent: "center",
-//     padding: 20,
-//   },
-//   card: {
-//     backgroundColor: "#ffffff",
-//     padding: 24,
-//     borderRadius: 12,
-//     shadowColor: "#000",
-//     shadowOffset: { width: 0, height: 2 },
-//     shadowOpacity: 0.1,
-//     shadowRadius: 4,
-//     elevation: 3,
-//   },
-//   title: {
-//     fontSize: 24,
-//     fontWeight: "bold",
-//     color: "#2f3640",
-//     marginBottom: 4,
-//     textAlign: "center",
-//   },
-//   subtitle: {
-//     fontSize: 14,
-//     color: "#718093",
-//     marginBottom: 24,
-//     textAlign: "center",
-//   },
-//   input: {
-//     backgroundColor: "#f1f2f6",
-//     paddingHorizontal: 16,
-//     paddingVertical: 12,
-//     borderRadius: 8,
-//     fontSize: 16,
-//     color: "#2f3640",
-//     marginBottom: 4,
-//     borderWidth: 1,
-//     borderColor: "#dcdde1",
-//   },
-//   error: {
-//     color: "#e74c3c",
-//     marginBottom: 12,
-//     fontSize: 13,
-//   },
-//   button: {
-//     backgroundColor: "#2ed573",
-//     paddingVertical: 14,
-//     borderRadius: 8,
-//     alignItems: "center",
-//     marginTop: 8,
-//   },
-//   buttonText: {
-//     color: "#ffffff",
-//     fontSize: 16,
-//     fontWeight: "bold",
-//   },
-//   linkContainer: {
-//     marginTop: 16,
-//     alignItems: "center",
-//   },
-//   linkText: {
-//     color: "#2ed573",
-//     fontSize: 14,
-//     fontWeight: "600",
-//   },
-// });
-
+import { useRef } from "react";
 import {
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
-  Alert,
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
@@ -196,16 +17,30 @@ import { z } from "zod";
 import { useRouter } from "expo-router";
 import { useAuthStore } from "./authStore";
 import { theme } from "../../theme/theme";
+import { useToast } from "@/providers/FeedbackProvider";
+import { LIMITES } from "@/utils/validacion";
+import { crearBloqueo } from "@/utils/envioUnico";
 
 const esquemaLogin = z.object({
-  correo: z.string().email("Ingresa un correo electrónico válido"),
-  contrasena: z.string().min(1, "Ingresa tu contraseña"),
+  correo: z
+    .string()
+    .trim()
+    .min(1, "Escribe tu correo")
+    .max(LIMITES.correo, "El correo es demasiado largo")
+    .email("Escribe un correo válido, por ejemplo nombre@correo.com"),
+  contrasena: z
+    .string()
+    .min(1, "Escribe tu contraseña para continuar")
+    .max(LIMITES.contrasenaMax, `La contraseña admite máximo ${LIMITES.contrasenaMax} caracteres`),
 });
 
 type FormValues = z.infer<typeof esquemaLogin>;
 export function LoginScreen() {
   const router = useRouter();
   const iniciarSesion = useAuthStore((estado) => estado.iniciarSesion);
+
+  const toast = useToast();
+  const bloqueo = useRef(crearBloqueo()).current;
 
   const {
     control,
@@ -219,7 +54,7 @@ export function LoginScreen() {
   const onSubmit = async (valores: FormValues) => {
     const { error } = await iniciarSesion(valores.correo, valores.contrasena);
     if (error) {
-      Alert.alert("Error al iniciar sesión", error);
+      toast.error("No pudimos iniciar tu sesión", error);
     }
   };
 
@@ -257,6 +92,7 @@ export function LoginScreen() {
                     autoCapitalize="none"
                     keyboardType="email-address"
                     autoCorrect={false}
+                    maxLength={LIMITES.correo}
                   />
                 )}
               />
@@ -281,6 +117,7 @@ export function LoginScreen() {
                     value={value}
                     onChangeText={onChange}
                     secureTextEntry
+                    maxLength={LIMITES.contrasenaMax}
                   />
                 )}
               />
@@ -293,7 +130,9 @@ export function LoginScreen() {
 
             <TouchableOpacity
               style={[styles.button, isSubmitting && styles.buttonDisabled]}
-              onPress={handleSubmit(onSubmit)}
+              onPress={() => {
+                bloqueo.ejecutar(() => handleSubmit(onSubmit)());
+              }}
               disabled={isSubmitting}
               activeOpacity={0.7}
             >

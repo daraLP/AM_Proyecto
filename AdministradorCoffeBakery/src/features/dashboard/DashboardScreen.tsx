@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Text,
   View,
+  useWindowDimensions,
 } from "react-native";
 import { BarChart } from "react-native-gifted-charts";
 import { useRouter } from "expo-router";
@@ -14,10 +15,14 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useDashboard } from "../../hooks/useDashboard";
 import { useEsAdmin } from "../auth/authStore";
 import { theme } from "../../theme/theme";
+import { mensajeDeError } from "@/utils/errores";
 
 export function DashboardScreen() {
   const router = useRouter();
   const esAdmin = useEsAdmin();
+  // El gráfico se adapta al ancho real (vertical u horizontal) en vez de medir 280 fijo
+  const { width: anchoPantalla } = useWindowDimensions();
+  const anchoGrafico = Math.max(Math.min(anchoPantalla - theme.spacing.md * 4 - 40, 560), 200);
   const {
     resumen,
     consumo,
@@ -29,7 +34,7 @@ export function DashboardScreen() {
 
   if (cargando && !resumen) {
     return (
-      <SafeAreaView style={styles.centered}>
+      <SafeAreaView style={styles.centered} edges={["bottom", "left", "right"]}>
         <ActivityIndicator size="large" color={theme.colors.secondary} />
         <Text style={styles.statusText}>Cargando resumen...</Text>
       </SafeAreaView>
@@ -38,9 +43,9 @@ export function DashboardScreen() {
 
   if (error && !resumen) {
     return (
-      <SafeAreaView style={styles.centered}>
+      <SafeAreaView style={styles.centered} edges={["bottom", "left", "right"]}>
         <Text style={styles.errorTitle}>No se pudo cargar el Dashboard</Text>
-        <Text style={styles.statusText}>{error.message}</Text>
+        <Text style={styles.statusText}>{mensajeDeError(error)}</Text>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Reintentar carga del Dashboard"
@@ -54,6 +59,7 @@ export function DashboardScreen() {
   }
 
   const hayAlertas = (resumen?.bajo ?? 0) > 0 || (resumen?.agotado ?? 0) > 0;
+  const hayConsumo = consumo.some((registro) => registro.salidas > 0);
   const datosGrafico = consumo.map((registro) => ({
     value: registro.salidas,
     label: registro.dia.slice(0, 3),
@@ -121,13 +127,13 @@ export function DashboardScreen() {
           <Text style={styles.sectionHint}>Últimos 7 días</Text>
         </View>
         <View style={styles.chartCard}>
-          {datosGrafico.length > 0 ? (
+          {hayConsumo ? (
             <BarChart
               data={datosGrafico}
-              width={280}
+              width={anchoGrafico}
               height={190}
-              barWidth={24}
-              spacing={18}
+              barWidth={Math.max(Math.floor(anchoGrafico / 12), 12)}
+              spacing={Math.max(Math.floor(anchoGrafico / 16), 8)}
               noOfSections={4}
               yAxisThickness={0}
               xAxisThickness={1}
@@ -139,9 +145,18 @@ export function DashboardScreen() {
               maxValue={Math.max(...datosGrafico.map((dato) => dato.value), 1)}
             />
           ) : (
-            <Text style={styles.emptyText}>No hay salidas registradas.</Text>
+            <Text style={styles.emptyText}>Aún no hay salidas registradas en los últimos 7 días.</Text>
           )}
         </View>
+
+        <Pressable
+          accessibilityRole="button"
+          style={styles.actividadButton}
+          onPress={() => router.push("/dashboard/actividad")}
+        >
+          <Text style={styles.actividadButtonText}>Ver actividad del equipo</Text>
+          <Text style={styles.actividadButtonText}>›</Text>
+        </Pressable>
 
         {esAdmin && (
           <Pressable
@@ -287,4 +302,17 @@ const styles = StyleSheet.create({
   primaryButtonText: { color: theme.colors.white, fontWeight: "700" },
   errorTitle: { color: theme.colors.error, fontSize: theme.fontSize.lg, fontWeight: "700" },
   statusText: { color: theme.colors.textSecondary, fontSize: theme.fontSize.sm, textAlign: "center", marginTop: theme.spacing.sm },
+  actividadButton: {
+    alignItems: "center",
+    backgroundColor: theme.colors.surface,
+    borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.lg,
+    borderWidth: 1,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: theme.spacing.sm,
+    minHeight: 56,
+    paddingHorizontal: theme.spacing.md,
+  },
+  actividadButtonText: { color: theme.colors.textPrimary, fontSize: theme.fontSize.md, fontWeight: "700" },
 });

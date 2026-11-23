@@ -1,172 +1,18 @@
-// import React from "react";
-// import { View, Text, TextInput, Button, Alert, ScrollView } from "react-native";
-// import { useForm, Controller } from "react-hook-form";
-// import { zodResolver } from "@hookform/resolvers/zod";
-// import { z } from "zod";
-// import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-// import { supabase } from "../../lib/supabaseClient";
-// import type { InventarioStackParamList } from "../../navigation/InventarioStack";
-
-// const esquemaInsumo = z.object({
-//   nombre: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
-//   unidad_medida: z.enum(["kg", "litros", "unidades", "cajas"]),
-//   stock_actual: z.coerce.number().min(0, "El stock no puede ser negativo"),
-//   stock_minimo: z.coerce
-//     .number()
-//     .min(0, "El stock mínimo no puede ser negativo"),
-// });
-
-// type FormInput = z.input<typeof esquemaInsumo>;
-// type FormOutput = z.infer<typeof esquemaInsumo>;
-
-// type Props = NativeStackScreenProps<InventarioStackParamList, "InsumoForm">;
-
-// export function InsumoFormScreen({ route, navigation }: Props) {
-//   const insumoExistente = route.params?.insumo;
-
-//   const {
-//     control,
-//     handleSubmit,
-//     formState: { errors, isSubmitting },
-//   } = useForm<FormInput, any, FormOutput>({
-//     resolver: zodResolver(esquemaInsumo),
-//     defaultValues: {
-//       nombre: insumoExistente?.nombre ?? "",
-//       unidad_medida: insumoExistente?.unidad_medida ?? "unidades",
-//       stock_actual: insumoExistente?.stock_actual ?? 0,
-//       stock_minimo: insumoExistente?.stock_minimo ?? 0,
-//     },
-//   });
-
-//   const onSubmit = async (valores: FormOutput) => {
-//     const { error } = insumoExistente
-//       ? await supabase
-//           .from("insumos")
-//           .update(valores)
-//           .eq("id", insumoExistente.id)
-//       : await supabase.from("insumos").insert(valores);
-
-//     if (error) {
-//       Alert.alert("Error al guardar", error.message);
-//       return;
-//     }
-
-//     navigation.goBack();
-//   };
-
-//   return (
-//     <ScrollView contentContainerStyle={{ padding: 20 }}>
-//       <Text>Nombre del insumo</Text>
-//       <Controller
-//         control={control}
-//         name="nombre"
-//         render={({ field: { onChange, value } }) => (
-//           <TextInput
-//             value={value}
-//             onChangeText={onChange}
-//             style={{
-//               borderWidth: 1,
-//               padding: 10,
-//               marginBottom: 4,
-//               borderRadius: 6,
-//             }}
-//           />
-//         )}
-//       />
-//       {errors.nombre && (
-//         <Text style={{ color: "red" }}>{errors.nombre.message}</Text>
-//       )}
-
-//       <Text style={{ marginTop: 12 }}>
-//         Unidad de medida (kg, litros, unidades, cajas)
-//       </Text>
-//       <Controller
-//         control={control}
-//         name="unidad_medida"
-//         render={({ field: { onChange, value } }) => (
-//           <TextInput
-//             value={value}
-//             onChangeText={onChange}
-//             style={{
-//               borderWidth: 1,
-//               padding: 10,
-//               marginBottom: 4,
-//               borderRadius: 6,
-//             }}
-//           />
-//         )}
-//       />
-//       {errors.unidad_medida && (
-//         <Text style={{ color: "red" }}>{errors.unidad_medida.message}</Text>
-//       )}
-
-//       <Text style={{ marginTop: 12 }}>Stock actual</Text>
-//       <Controller
-//         control={control}
-//         name="stock_actual"
-//         render={({ field: { onChange, value } }) => (
-//           <TextInput
-//             value={String(value)}
-//             onChangeText={onChange}
-//             keyboardType="numeric"
-//             style={{
-//               borderWidth: 1,
-//               padding: 10,
-//               marginBottom: 4,
-//               borderRadius: 6,
-//             }}
-//           />
-//         )}
-//       />
-//       {errors.stock_actual && (
-//         <Text style={{ color: "red" }}>{errors.stock_actual.message}</Text>
-//       )}
-
-//       <Text style={{ marginTop: 12 }}>Stock mínimo</Text>
-//       <Controller
-//         control={control}
-//         name="stock_minimo"
-//         render={({ field: { onChange, value } }) => (
-//           <TextInput
-//             value={String(value)}
-//             onChangeText={onChange}
-//             keyboardType="numeric"
-//             style={{
-//               borderWidth: 1,
-//               padding: 10,
-//               marginBottom: 4,
-//               borderRadius: 6,
-//             }}
-//           />
-//         )}
-//       />
-//       {errors.stock_minimo && (
-//         <Text style={{ color: "red" }}>{errors.stock_minimo.message}</Text>
-//       )}
-
-//       <View style={{ marginTop: 20 }}>
-//         <Button
-//           title={isSubmitting ? "Guardando..." : "Guardar"}
-//           onPress={handleSubmit(onSubmit)}
-//           disabled={isSubmitting}
-//         />
-//       </View>
-//     </ScrollView>
-//   );
-// }
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   StyleSheet,
   View,
   Text,
   TextInput,
   TouchableOpacity,
-  Alert,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  Image,
 } from "react-native";
+import * as ImagePicker from "expo-image-picker";
+import { useQueryClient } from "@tanstack/react-query";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -178,23 +24,47 @@ import {
   crearInsumo,
   obtenerInsumo,
 } from "../../services/insumos";
+import { subirFotoInsumo } from "../../services/fotos";
+import { useCategorias, useProveedores } from "../../hooks/useCatalogos";
+import { mensajeDeError } from "@/utils/errores";
+import { useToast } from "@/providers/FeedbackProvider";
+import { useAvisoPermiso } from "@/hooks/useAvisoPermiso";
+import { LIMITES, filtrarEntradaNumerica, normalizarTexto, validarCantidad } from "@/utils/validacion";
+import { crearBloqueo } from "@/utils/envioUnico";
+
+// Campo numérico: llega como texto; se valida (vacío, letras, negativo, decimales, tope) y sale como número
+const campoCantidad = z
+  .string()
+  .superRefine((texto, ctx) => {
+    const r = validarCantidad(texto, { permitirCero: true });
+    if (!r.ok) ctx.addIssue({ code: "custom", message: r.error });
+  })
+  .transform((texto) => Number(texto.trim().replace(",", ".")));
 
 const esquemaInsumo = z.object({
-  nombre: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
-  unidad_medida: z.enum(["kg", "litros", "unidades", "cajas"]),
-  stock_actual: z.coerce.number().min(0, "El stock no puede ser negativo"),
-  stock_minimo: z.coerce
-    .number()
-    .min(0, "El stock mínimo no puede ser negativo"),
+  nombre: z
+    .string()
+    .transform(normalizarTexto)
+    .pipe(
+      z
+        .string()
+        .min(2, "Escribe un nombre de al menos 2 letras")
+        .max(LIMITES.nombreInsumo, `El nombre admite máximo ${LIMITES.nombreInsumo} caracteres`),
+    ),
+  unidad_medida: z.enum(["kg", "litros", "unidades", "cajas"], { error: "Elige una unidad de medida" }),
+  stock_actual: campoCantidad,
+  stock_minimo: campoCantidad,
+  categoria_id: z.string().nullable(),
+  proveedor_principal_id: z.string().nullable(),
 });
 
 type FormInput = z.input<typeof esquemaInsumo>;
 type FormOutput = z.infer<typeof esquemaInsumo>;
 
-const UNIDADES: Array<{
+const UNIDADES: {
   label: string;
   value: "kg" | "litros" | "unidades" | "cajas";
-}> = [
+}[] = [
   { label: "Kg", value: "kg" },
   { label: "Litros", value: "litros" },
   { label: "Unidades", value: "unidades" },
@@ -204,9 +74,8 @@ const UNIDADES: Array<{
 export function InsumoFormScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id?: string }>();
-  const [insumoExistente, setInsumoExistente] = useState<
-    Awaited<ReturnType<typeof obtenerInsumo>>["data"]
-  >(null);
+  const [insumoExistente, setInsumoExistente] =
+    useState<Awaited<ReturnType<typeof obtenerInsumo>>["data"]>(null);
 
   const {
     control,
@@ -219,10 +88,22 @@ export function InsumoFormScreen() {
     defaultValues: {
       nombre: "",
       unidad_medida: "unidades",
-      stock_actual: 0,
-      stock_minimo: 0,
+      stock_actual: "0",
+      stock_minimo: "0",
+      categoria_id: null,
+      proveedor_principal_id: null,
     },
   });
+  const queryClient = useQueryClient();
+  const toast = useToast();
+  const avisarPermiso = useAvisoPermiso();
+  const { data: categorias = [] } = useCategorias();
+  const { data: proveedores = [] } = useProveedores();
+  // Foto elegida en este formulario (se sube al guardar, cuando ya existe el id del insumo)
+  const [fotoLocal, setFotoLocal] = useState<string | null>(null);
+  const bloqueo = useRef(crearBloqueo()).current;
+  // Al editar, no se puede guardar hasta que el insumo cargue (si no, se crearía uno duplicado)
+  const cargandoInsumo = Boolean(id) && insumoExistente === null;
 
   useEffect(() => {
     if (!id) return;
@@ -230,32 +111,92 @@ export function InsumoFormScreen() {
     void obtenerInsumo(id).then(({ data, error }) => {
       if (!activo) return;
       if (error) {
-        Alert.alert("Error al cargar el insumo", error);
+        toast.error("No pudimos abrir el insumo", error);
         return;
       }
       setInsumoExistente(data);
       if (data) {
         setValue("nombre", data.nombre);
         setValue("unidad_medida", data.unidad_medida);
-        setValue("stock_actual", data.stock_actual);
-        setValue("stock_minimo", data.stock_minimo);
+        setValue("stock_actual", String(data.stock_actual));
+        setValue("stock_minimo", String(data.stock_minimo));
+        setValue("categoria_id", data.categoria_id);
+        setValue("proveedor_principal_id", data.proveedor_principal_id);
       }
     });
     return () => {
       activo = false;
     };
-  }, [id, setValue]);
+  }, [id, setValue, toast]);
 
   const unidadSeleccionada = watch("unidad_medida");
+  const categoriaSeleccionada = watch("categoria_id");
+  const proveedorSeleccionado = watch("proveedor_principal_id");
+
+  const elegirFoto = async (origen: "camara" | "galeria") => {
+    const permiso =
+      origen === "camara"
+        ? await ImagePicker.requestCameraPermissionsAsync()
+        : await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permiso.granted) {
+      void avisarPermiso(origen);
+      return;
+    }
+    const opciones: ImagePicker.ImagePickerOptions = {
+      mediaTypes: ["images"],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    };
+    const resultado =
+      origen === "camara"
+        ? await ImagePicker.launchCameraAsync(opciones)
+        : await ImagePicker.launchImageLibraryAsync(opciones);
+    if (!resultado.canceled) setFotoLocal(resultado.assets[0].uri);
+  };
 
   const onSubmit = async (valores: FormOutput) => {
+    if (id && !insumoExistente) {
+      toast.aviso("Espera un momento", "Todavía estamos cargando el insumo. Revisa tu conexión e inténtalo de nuevo.");
+      return;
+    }
     const { stock_actual, ...datos } = valores;
-    const { error } = insumoExistente
-      ? await actualizarInsumo(insumoExistente.id, datos)
-      : await crearInsumo(datos, stock_actual);
 
-    if (error) return Alert.alert("Error al guardar", error);
+    let idInsumo = insumoExistente?.id ?? null;
+    let errorGuardado: string | null;
+    if (insumoExistente) {
+      ({ error: errorGuardado } = await actualizarInsumo(insumoExistente.id, datos));
+    } else {
+      const r = await crearInsumo(datos, stock_actual);
+      idInsumo = r.id;
+      errorGuardado = r.error;
+    }
+
+    // La foto se sube con el id ya conocido; un fallo aquí no deshace el guardado
+    let avisoFoto: string | null = null;
+    if (idInsumo && fotoLocal) {
+      try {
+        const url = await subirFotoInsumo(fotoLocal, idInsumo);
+        const { error } = await actualizarInsumo(idInsumo, { foto_url: url });
+        if (error) avisoFoto = error;
+      } catch (e) {
+        avisoFoto = mensajeDeError(e, "No se pudo subir la foto.");
+      }
+    }
+
+    // Sin await: sin conexión la recarga queda en espera y no debe dejar el botón cargando para siempre
+    void queryClient.invalidateQueries({ queryKey: ["insumos"] });
+    void queryClient.invalidateQueries({ queryKey: ["insumo"] });
+    void queryClient.invalidateQueries({ queryKey: ["compras"] });
+    void queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+
+    if (errorGuardado) return toast.error("No pudimos guardar el insumo", errorGuardado);
     router.back();
+    if (avisoFoto) {
+      toast.aviso("Insumo guardado, pero sin foto", `${avisoFoto} Puedes agregarla desde el detalle del insumo.`);
+    } else {
+      toast.exito(insumoExistente ? "Insumo actualizado" : "Insumo creado");
+    }
   };
 
   return (
@@ -280,6 +221,7 @@ export function InsumoFormScreen() {
                     value={value}
                     onChangeText={onChange}
                     placeholder="ej. Café Grano Arábica"
+                    maxLength={LIMITES.nombreInsumo}
                     placeholderTextColor={theme.colors.textMuted}
                     style={[styles.input, errors.nombre && styles.inputError]}
                   />
@@ -302,6 +244,7 @@ export function InsumoFormScreen() {
                         styles.unitChipActive,
                     ]}
                     onPress={() => setValue("unidad_medida", item.value)}
+                    disabled={Boolean(id)}
                     activeOpacity={0.7}
                   >
                     <Text
@@ -323,17 +266,93 @@ export function InsumoFormScreen() {
               )}
             </View>
 
+            <View style={styles.fieldContainer}>
+              <Text style={styles.label}>Foto</Text>
+              <View style={styles.fotoFila}>
+                {fotoLocal ?? insumoExistente?.foto_url ? (
+                  <Image
+                    source={{ uri: (fotoLocal ?? insumoExistente?.foto_url) as string }}
+                    style={styles.fotoPreview}
+                  />
+                ) : (
+                  <View style={[styles.fotoPreview, styles.fotoVacia]}>
+                    <Text style={styles.fotoVaciaTexto}>Sin foto</Text>
+                  </View>
+                )}
+                <View style={styles.fotoBotones}>
+                  <TouchableOpacity style={styles.unitChip} onPress={() => void elegirFoto("camara")}>
+                    <Text style={styles.unitChipText}>Tomar foto</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.unitChip} onPress={() => void elegirFoto("galeria")}>
+                    <Text style={styles.unitChipText}>Galería</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+
+            <View style={styles.fieldContainer}>
+              <Text style={styles.label}>Categoría</Text>
+              <View style={styles.unitsGrid}>
+                <TouchableOpacity
+                  style={[styles.unitChip, categoriaSeleccionada === null && styles.unitChipActive]}
+                  onPress={() => setValue("categoria_id", null)}
+                >
+                  <Text style={[styles.unitChipText, categoriaSeleccionada === null && styles.unitChipTextActive]}>
+                    Sin categoría
+                  </Text>
+                </TouchableOpacity>
+                {categorias.map((c) => (
+                  <TouchableOpacity
+                    key={c.id}
+                    style={[styles.unitChip, categoriaSeleccionada === c.id && styles.unitChipActive]}
+                    onPress={() => setValue("categoria_id", c.id)}
+                  >
+                    <Text style={[styles.unitChipText, categoriaSeleccionada === c.id && styles.unitChipTextActive]}>
+                      {c.nombre}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
+            <View style={styles.fieldContainer}>
+              <Text style={styles.label}>Proveedor principal</Text>
+              <View style={styles.unitsGrid}>
+                <TouchableOpacity
+                  style={[styles.unitChip, proveedorSeleccionado === null && styles.unitChipActive]}
+                  onPress={() => setValue("proveedor_principal_id", null)}
+                >
+                  <Text style={[styles.unitChipText, proveedorSeleccionado === null && styles.unitChipTextActive]}>
+                    Ninguno
+                  </Text>
+                </TouchableOpacity>
+                {proveedores.map((p) => (
+                  <TouchableOpacity
+                    key={p.id}
+                    style={[styles.unitChip, proveedorSeleccionado === p.id && styles.unitChipActive]}
+                    onPress={() => setValue("proveedor_principal_id", p.id)}
+                  >
+                    <Text style={[styles.unitChipText, proveedorSeleccionado === p.id && styles.unitChipTextActive]}>
+                      {p.nombre}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
             <View style={styles.row}>
               <View style={[styles.fieldContainer, styles.flexField]}>
-                <Text style={styles.label}>Stock Actual</Text>
+                <Text style={styles.label}>{id ? "Stock actual (usa el contador)" : "Stock inicial"}</Text>
                 <Controller
                   control={control}
                   name="stock_actual"
                   render={({ field: { onChange, value } }) => (
                     <TextInput
-                      value={String(value)}
-                      onChangeText={onChange}
-                      keyboardType="numeric"
+                      value={value}
+                      onChangeText={(t) => onChange(filtrarEntradaNumerica(t))}
+                      editable={!id}
+                      maxLength={10}
+                      keyboardType="decimal-pad"
                       placeholder="0"
                       placeholderTextColor={theme.colors.textMuted}
                       style={[
@@ -357,9 +376,10 @@ export function InsumoFormScreen() {
                   name="stock_minimo"
                   render={({ field: { onChange, value } }) => (
                     <TextInput
-                      value={String(value)}
-                      onChangeText={onChange}
-                      keyboardType="numeric"
+                      value={value}
+                      onChangeText={(t) => onChange(filtrarEntradaNumerica(t))}
+                      maxLength={10}
+                      keyboardType="decimal-pad"
                       placeholder="0"
                       placeholderTextColor={theme.colors.textMuted}
                       style={[
@@ -378,9 +398,11 @@ export function InsumoFormScreen() {
             </View>
 
             <TouchableOpacity
-              style={[styles.saveButton, isSubmitting && styles.buttonDisabled]}
-              onPress={handleSubmit(onSubmit)}
-              disabled={isSubmitting}
+              style={[styles.saveButton, (isSubmitting || cargandoInsumo) && styles.buttonDisabled]}
+              onPress={() => {
+                bloqueo.ejecutar(() => handleSubmit(onSubmit)());
+              }}
+              disabled={isSubmitting || cargandoInsumo}
               activeOpacity={0.7}
             >
               {isSubmitting ? (
@@ -499,4 +521,15 @@ const styles = StyleSheet.create({
     fontSize: theme.fontSize.md,
     fontWeight: "700",
   },
+  fotoFila: { alignItems: "center", flexDirection: "row", gap: theme.spacing.md },
+  fotoPreview: { borderRadius: theme.borderRadius.md, height: 88, width: 88 },
+  fotoVacia: {
+    alignItems: "center",
+    backgroundColor: theme.colors.background,
+    borderColor: theme.colors.border,
+    borderWidth: 1,
+    justifyContent: "center",
+  },
+  fotoVaciaTexto: { color: theme.colors.textMuted, fontSize: theme.fontSize.xs },
+  fotoBotones: { flex: 1, gap: theme.spacing.sm },
 });

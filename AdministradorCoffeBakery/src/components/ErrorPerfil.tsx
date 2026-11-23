@@ -1,4 +1,5 @@
-import { Button, StyleSheet, Text, View } from "react-native";
+import { Boton } from "@/components/Boton";
+import { ErrorState } from "@/components/ErrorState";
 import { useAuthStore } from "@/features/auth/authStore";
 
 export function ErrorPerfil() {
@@ -7,29 +8,14 @@ export function ErrorPerfil() {
   const session = useAuthStore((estado) => estado.session);
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>No se pudo cargar tu perfil</Text>
-      <Button
-        title="Reintentar"
-        onPress={() => {
-          if (session) void cargarPerfil(session.user.id);
-        }}
-      />
-      <Button title="Cerrar sesión" onPress={() => void cerrarSesion()} />
-    </View>
+    <ErrorState
+      title="No pudimos cargar tu perfil"
+      message="Reintenta; si sigue igual, cierra sesión y vuelve a entrar. Si el problema continúa, avísale a un administrador."
+      onRetry={() => {
+        if (session) void cargarPerfil(session.user.id);
+      }}
+    >
+      <Boton titulo="Cerrar sesión" variante="secundario" onPress={() => void cerrarSesion()} />
+    </ErrorState>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    gap: 12,
-    padding: 24,
-  },
-  title: {
-    fontSize: 18,
-    textAlign: "center",
-  },
-});

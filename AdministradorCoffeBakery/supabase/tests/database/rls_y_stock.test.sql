@@ -1,5 +1,5 @@
 begin;
-select plan(24);
+select plan(26);
 
 -- ── Fixtures (como postgres: auth.uid() es NULL y los triggers de protección lo permiten) ──
 insert into auth.users (id, aud, role, email, raw_user_meta_data) values
@@ -80,9 +80,15 @@ select throws_ok($$ insert into public.movimientos_inventario
                             'b0000000-0000-0000-0000-000000000002', 'entrada', 1, 'Otro', 1) $$,
                  '42501', null, 'no hay INSERT directo en movimientos');
 
--- 14) Un barista no crea insumos
-select throws_ok($$ insert into public.insumos (nombre, unidad_medida) values ('X', 'kg') $$,
-                 '42501', null, 'barista no inserta insumos');
+-- 14) Un barista SÍ crea insumos (con stock 0), pero no con stock directo ni puede desactivarlos
+select lives_ok($$ insert into public.insumos (id, nombre, unidad_medida)
+                   values ('d0000000-0000-0000-0000-0000000000d2', 'Azúcar test', 'kg') $$,
+                'barista crea un insumo con stock 0');
+select throws_ok($$ insert into public.insumos (nombre, unidad_medida, stock_actual) values ('X', 'kg', 5) $$,
+                 '42501', null, 'barista no crea con stock directo');
+select throws_ok($$ update public.insumos set activo = false
+                    where id = 'd0000000-0000-0000-0000-0000000000d2' $$,
+                 '42501', null, 'barista no puede desactivar insumos');
 
 -- 15-16) Idempotencia: misma operación dos veces = un solo movimiento y un solo efecto
 select is((select (public.registrar_movimiento('d0000000-0000-0000-0000-0000000000d1',

@@ -7,7 +7,7 @@ import {
 } from "../services/dashboard";
 
 const resumenKey = ["dashboard", "resumen"] as const;
-const consumoKey = ["dashboard", "consumo-semanal", 7] as const;
+const consumoKey = ["dashboard", "consumo"] as const;
 
 export function useDashboard() {
   const queryClient = useQueryClient();
