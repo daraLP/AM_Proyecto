@@ -22,15 +22,12 @@ export function DashboardScreen() {
   const esAdmin = useEsAdmin();
   // El gráfico se adapta al ancho real (vertical u horizontal) en vez de medir 280 fijo
   const { width: anchoPantalla } = useWindowDimensions();
-  const anchoGrafico = Math.max(Math.min(anchoPantalla - theme.spacing.md * 4 - 40, 560), 200);
-  const {
-    resumen,
-    consumo,
-    cargando,
-    actualizando,
-    error,
-    refrescar,
-  } = useDashboard();
+  const anchoGrafico = Math.max(
+    Math.min(anchoPantalla - theme.spacing.md * 4 - 40, 560),
+    200,
+  );
+  const { resumen, consumo, cargando, actualizando, error, refrescar } =
+    useDashboard();
 
   if (cargando && !resumen) {
     return (
@@ -60,9 +57,11 @@ export function DashboardScreen() {
 
   const hayAlertas = (resumen?.bajo ?? 0) > 0 || (resumen?.agotado ?? 0) > 0;
   const hayConsumo = consumo.some((registro) => registro.salidas > 0);
+  const DIAS_CORTOS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+
   const datosGrafico = consumo.map((registro) => ({
     value: registro.salidas,
-    label: registro.dia.slice(0, 3),
+    label: DIAS_CORTOS[new Date(`${registro.dia}T12:00:00`).getDay()],
     frontColor: theme.colors.secondary,
     topLabelComponent: () => (
       <Text style={styles.chartValue}>{registro.salidas}</Text>
@@ -145,7 +144,9 @@ export function DashboardScreen() {
               maxValue={Math.max(...datosGrafico.map((dato) => dato.value), 1)}
             />
           ) : (
-            <Text style={styles.emptyText}>Aún no hay salidas registradas en los últimos 7 días.</Text>
+            <Text style={styles.emptyText}>
+              Aún no hay salidas registradas en los últimos 7 días.
+            </Text>
           )}
         </View>
 
@@ -154,7 +155,9 @@ export function DashboardScreen() {
           style={styles.actividadButton}
           onPress={() => router.push("/dashboard/actividad")}
         >
-          <Text style={styles.actividadButtonText}>Ver actividad del equipo</Text>
+          <Text style={styles.actividadButtonText}>
+            Ver actividad del equipo
+          </Text>
           <Text style={styles.actividadButtonText}>›</Text>
         </Pressable>
 
@@ -252,7 +255,11 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.warningLight,
   },
   alertCopy: { flex: 1 },
-  alertTitle: { color: "#714B00", fontSize: theme.fontSize.md, fontWeight: "800" },
+  alertTitle: {
+    color: "#714B00",
+    fontSize: theme.fontSize.md,
+    fontWeight: "800",
+  },
   alertText: { color: "#714B00", fontSize: theme.fontSize.xs, marginTop: 2 },
   alertButton: {
     paddingVertical: theme.spacing.sm,
@@ -260,7 +267,11 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.sm,
     backgroundColor: theme.colors.secondary,
   },
-  alertButtonText: { color: theme.colors.white, fontSize: theme.fontSize.xs, fontWeight: "700" },
+  alertButtonText: {
+    color: theme.colors.white,
+    fontSize: theme.fontSize.xs,
+    fontWeight: "700",
+  },
   sectionHeader: {
     flexDirection: "row",
     alignItems: "baseline",
@@ -268,8 +279,15 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing.xl,
     marginBottom: theme.spacing.sm,
   },
-  sectionTitle: { color: theme.colors.textPrimary, fontSize: theme.fontSize.lg, fontWeight: "800" },
-  sectionHint: { color: theme.colors.textSecondary, fontSize: theme.fontSize.xs },
+  sectionTitle: {
+    color: theme.colors.textPrimary,
+    fontSize: theme.fontSize.lg,
+    fontWeight: "800",
+  },
+  sectionHint: {
+    color: theme.colors.textSecondary,
+    fontSize: theme.fontSize.xs,
+  },
   chartCard: {
     minHeight: 240,
     alignItems: "center",
@@ -290,7 +308,11 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.md,
     backgroundColor: theme.colors.secondary,
   },
-  reportButtonText: { color: theme.colors.white, fontSize: theme.fontSize.md, fontWeight: "700" },
+  reportButtonText: {
+    color: theme.colors.white,
+    fontSize: theme.fontSize.md,
+    fontWeight: "700",
+  },
   reportArrow: { color: theme.colors.white, fontSize: theme.fontSize.xl },
   primaryButton: {
     marginTop: theme.spacing.md,
@@ -300,8 +322,17 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.secondary,
   },
   primaryButtonText: { color: theme.colors.white, fontWeight: "700" },
-  errorTitle: { color: theme.colors.error, fontSize: theme.fontSize.lg, fontWeight: "700" },
-  statusText: { color: theme.colors.textSecondary, fontSize: theme.fontSize.sm, textAlign: "center", marginTop: theme.spacing.sm },
+  errorTitle: {
+    color: theme.colors.error,
+    fontSize: theme.fontSize.lg,
+    fontWeight: "700",
+  },
+  statusText: {
+    color: theme.colors.textSecondary,
+    fontSize: theme.fontSize.sm,
+    textAlign: "center",
+    marginTop: theme.spacing.sm,
+  },
   actividadButton: {
     alignItems: "center",
     backgroundColor: theme.colors.surface,
@@ -314,5 +345,9 @@ const styles = StyleSheet.create({
     minHeight: 56,
     paddingHorizontal: theme.spacing.md,
   },
-  actividadButtonText: { color: theme.colors.textPrimary, fontSize: theme.fontSize.md, fontWeight: "700" },
+  actividadButtonText: {
+    color: theme.colors.textPrimary,
+    fontSize: theme.fontSize.md,
+    fontWeight: "700",
+  },
 });
